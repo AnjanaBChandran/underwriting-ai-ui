@@ -7,6 +7,18 @@ export interface Case {
   status: "Pending" | "In Review" | "Approved" | "Declined";
   createdDate: string;
   updatedBy: string;
+  age?: number;
+  gender?: string;
+  education?: string;
+  occupation?: string;
+  drcScore?: string;
+  nominee?: string;
+  uwSummary?: string;
+  financialInfo?: { label: string; value: string }[];
+  medicalInfo?: { label: string; value: string }[];
+  documents?: { name: string; uploadDate: string }[];
+  iibData?: { label: string; value: string }[];
+  auditLogs?: { timestamp: string; user: string; action: string }[];
 }
 
 export const sampleCases: Case[] = [
@@ -18,7 +30,60 @@ export const sampleCases: Case[] = [
     premium: "$12,450/year",
     status: "Pending",
     createdDate: "2024-11-28",
-    updatedBy: "Michael Chen"
+    updatedBy: "Michael Chen",
+    age: 42,
+    gender: "F",
+    education: "Postgrad",
+    occupation: "Self Employed",
+    drcScore: "Standard",
+    nominee: "Mother",
+    uwSummary: `Summary
+UW-2024-001
+Sarah Johnson
+11/28/2024, 9:15:32 AM
+****************************
+No potential match found
+DRC std
+42/ F / postgrad/ self empl / AI 15L
+nom mother ❌
+KYC ok
+Q 8 in IAR answered yes – need details
+CDF ok
+sign on medicals matches PAN
+Since SAR with ABSLI above 5 cr, would need SRUW sign off however incomplete case, would need reqts first
+❌ c/f specimen signatures of LA in diff styles, ITRs and COI for last 3 yrs and form 26 AS for latest AY
+Need details and reason for yes to Q8 in IAR
+Income proof verification pending`,
+    financialInfo: [
+      { label: "Annual Income", value: "$180,000" },
+      { label: "Net Worth", value: "$2.5M" },
+      { label: "ITR Filed", value: "Last 3 years available" },
+      { label: "Income Source", value: "Business Revenue" },
+    ],
+    medicalInfo: [
+      { label: "BMI", value: "23.5 (Normal)" },
+      { label: "Blood Pressure", value: "120/80 mmHg" },
+      { label: "Smoking Status", value: "Non-smoker 10+ years" },
+      { label: "Medical History", value: "No significant conditions" },
+    ],
+    documents: [
+      { name: "Medical Examination Report", uploadDate: "2024-11-25" },
+      { name: "Financial Statements", uploadDate: "2024-11-24" },
+      { name: "Identity Verification", uploadDate: "2024-11-24" },
+      { name: "Income Tax Returns", uploadDate: "2024-11-23" },
+    ],
+    iibData: [
+      { label: "Previous Policy", value: "Term Plan - HDFC Life" },
+      { label: "Policy Number", value: "HDFC/TP/2020/45678" },
+      { label: "Sum Assured", value: "$500,000" },
+      { label: "Status", value: "Active" },
+      { label: "Premium Paid", value: "Regular - No defaults" },
+    ],
+    auditLogs: [
+      { timestamp: "2024-11-28 14:30", user: "Michael Chen", action: "Case assigned" },
+      { timestamp: "2024-11-27 16:45", user: "System", action: "Documents uploaded" },
+      { timestamp: "2024-11-27 10:20", user: "Sarah Johnson", action: "Application submitted" },
+    ],
   },
   {
     id: "UW-2024-002",
