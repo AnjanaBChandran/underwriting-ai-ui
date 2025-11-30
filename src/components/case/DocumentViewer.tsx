@@ -16,34 +16,28 @@ export const DocumentViewer = ({ documents }: DocumentViewerProps) => {
   const [selectedDoc, setSelectedDoc] = useState(documents[0]?.name || "");
 
   return (
-    <div className="h-full flex flex-col gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Document Viewer</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={selectedDoc} onValueChange={setSelectedDoc}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select document" />
-            </SelectTrigger>
-            <SelectContent>
-              {documents.map((doc) => (
-                <SelectItem key={doc.name} value={doc.name}>
-                  {doc.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+    <div className="h-full border border-border rounded-lg bg-muted/30 p-4 flex flex-col gap-4">
+      <div>
+        <h3 className="text-sm font-semibold mb-3">Document Viewer</h3>
+        <Select value={selectedDoc} onValueChange={setSelectedDoc}>
+          <SelectTrigger className="bg-background">
+            <SelectValue placeholder="Select document" />
+          </SelectTrigger>
+          <SelectContent>
+            {documents.map((doc) => (
+              <SelectItem key={doc.name} value={doc.name}>
+                {doc.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      <Card className="flex-1">
-        <CardContent className="pt-6 h-full flex flex-col items-center justify-center text-muted-foreground">
-          <FileText className="h-16 w-16 mb-4 opacity-50" />
-          <p className="text-sm">Preview: {selectedDoc}</p>
-          <p className="text-xs mt-2">Document viewer placeholder</p>
-        </CardContent>
-      </Card>
+      <div className="flex-1 border border-border rounded bg-background flex flex-col items-center justify-center text-muted-foreground p-8">
+        <FileText className="h-16 w-16 mb-4 opacity-50" />
+        <p className="text-sm">Preview: {selectedDoc}</p>
+        <p className="text-xs mt-2">Document viewer placeholder</p>
+      </div>
     </div>
   );
 };
