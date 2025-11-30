@@ -62,56 +62,58 @@ const CaseWorkspace = () => {
         </div>
       </header>
 
-      <ResizablePanelGroup direction="horizontal" className="flex-1">
-        {/* Left Panel - Document Viewer */}
-        <ResizablePanel defaultSize={40} minSize={30}>
-          <div className="h-full p-6">
-            <DocumentViewer documents={caseData.documents || []} />
-          </div>
-        </ResizablePanel>
-
-        <ResizableHandle withHandle />
-
-        {/* Right Panel - Tabs */}
-        <ResizablePanel defaultSize={60} minSize={40}>
-          <div className="h-full p-6 overflow-auto">
-            <Tabs defaultValue="worksheet" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="worksheet">
-                  <ClipboardList className="h-4 w-4 mr-2" />
-                  Worksheet
-                </TabsTrigger>
-                <TabsTrigger value="iib">
-                  <Database className="h-4 w-4 mr-2" />
-                  IIB
-                </TabsTrigger>
-                <TabsTrigger value="audit">
-                  <Clock className="h-4 w-4 mr-2" />
-                  Audit Logs
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="worksheet">
-                <WorksheetTab caseData={caseData} />
-              </TabsContent>
-
-              <TabsContent value="iib">
-                <IIBTab iibData={caseData.iibData} />
-              </TabsContent>
-
-              <TabsContent value="audit">
-                <AuditLogsTab auditLogs={caseData.auditLogs} />
-              </TabsContent>
-            </Tabs>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <Button variant="outline">Request More Info</Button>
-              <Button variant="destructive">Decline</Button>
-              <Button>Approve</Button>
+      <div className="flex-1 overflow-auto">
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          {/* Left Panel - Document Viewer */}
+          <ResizablePanel defaultSize={40} minSize={30}>
+            <div className="h-full p-6">
+              <DocumentViewer documents={caseData.documents || []} />
             </div>
-          </div>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+          </ResizablePanel>
+
+          <ResizableHandle withHandle />
+
+          {/* Right Panel - Tabs */}
+          <ResizablePanel defaultSize={60} minSize={40}>
+            <div className="h-full p-6">
+              <Tabs defaultValue="worksheet" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="worksheet">
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    Worksheet
+                  </TabsTrigger>
+                  <TabsTrigger value="iib">
+                    <Database className="h-4 w-4 mr-2" />
+                    IIB
+                  </TabsTrigger>
+                  <TabsTrigger value="audit">
+                    <Clock className="h-4 w-4 mr-2" />
+                    Audit Logs
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="worksheet">
+                  <WorksheetTab caseData={caseData} />
+                </TabsContent>
+
+                <TabsContent value="iib">
+                  <IIBTab iibData={caseData.iibData} />
+                </TabsContent>
+
+                <TabsContent value="audit">
+                  <AuditLogsTab auditLogs={caseData.auditLogs} />
+                </TabsContent>
+              </Tabs>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <Button variant="outline">Request More Info</Button>
+                <Button variant="destructive">Decline</Button>
+                <Button>Approve</Button>
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
     </div>
   );
 };
