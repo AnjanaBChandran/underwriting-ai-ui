@@ -3,6 +3,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ConfidenceIndicator, ConfidenceLevel } from "./ConfidenceIndicator";
+import { ViewSourceLink } from "./ViewSourceLink";
+
+interface ExtractedField {
+  label: string;
+  value: string;
+  confidence?: ConfidenceLevel;
+  confidencePercentage?: number;
+  sourceDocs?: string[];
+  sourceDoc?: string;
+  highlightLocation?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
 
 interface WorksheetTabProps {
   caseData: {
@@ -16,13 +33,32 @@ interface WorksheetTabProps {
     drcScore?: string;
     nominee?: string;
     uwSummary?: string;
-    financialInfo?: { label: string; value: string }[];
-    medicalInfo?: { label: string; value: string }[];
+    financialInfo?: ExtractedField[];
+    medicalInfo?: ExtractedField[];
   };
+  onViewSource?: (docName: string, highlight: any) => void;
 }
 
-export const WorksheetTab = ({ caseData }: WorksheetTabProps) => {
+export const WorksheetTab = ({ caseData, onViewSource }: WorksheetTabProps) => {
   const { toast } = useToast();
+
+  const handleViewSource = (field: ExtractedField) => {
+    if (!onViewSource || !field.sourceDoc || !field.highlightLocation) {
+      toast({
+        title: "Source not available",
+        description: "Document source information is not available for this field",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    onViewSource(field.sourceDoc, {
+      fieldName: field.label,
+      value: field.value,
+      confidence: field.confidence || "Unknown",
+      ...field.highlightLocation
+    });
+  };
 
   // Generate UW Summary dynamically
   const generateSummary = () => {
@@ -150,14 +186,29 @@ export const WorksheetTab = ({ caseData }: WorksheetTabProps) => {
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
             {caseData.financialInfo?.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center">
+              <div key={idx} className="flex justify-between items-start">
                 <span className="text-muted-foreground">{item.label}:</span>
-                <span className="font-medium flex items-center gap-1">
-                  {item.value}
-                  {item.value.toLowerCase().includes('pending') && (
-                    <span className="text-destructive">❌</span>
-                  )}
-                </span>
+                <div className="flex flex-col items-end gap-0.5">
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium">{item.value}</span>
+                    {item.value.toLowerCase().includes('pending') && (
+                      <span className="text-destructive">❌</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {item.confidence && (
+                      <ConfidenceIndicator 
+                        level={item.confidence}
+                        percentage={item.confidencePercentage}
+                        sourceDocs={item.sourceDocs}
+                        fieldName={item.label}
+                      />
+                    )}
+                    {item.sourceDoc && (
+                      <ViewSourceLink onClick={() => handleViewSource(item)} />
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -172,14 +223,29 @@ export const WorksheetTab = ({ caseData }: WorksheetTabProps) => {
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
             {caseData.medicalInfo?.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-center">
+              <div key={idx} className="flex justify-between items-start">
                 <span className="text-muted-foreground">{item.label}:</span>
-                <span className="font-medium flex items-center gap-1">
-                  {item.value}
-                  {(item.label === "Medical History" && item.value !== "No significant conditions") && (
-                    <span className="text-destructive">❌</span>
-                  )}
-                </span>
+                <div className="flex flex-col items-end gap-0.5">
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium">{item.value}</span>
+                    {(item.label === "Medical History" && item.value !== "No significant conditions") && (
+                      <span className="text-destructive">❌</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {item.confidence && (
+                      <ConfidenceIndicator 
+                        level={item.confidence}
+                        percentage={item.confidencePercentage}
+                        sourceDocs={item.sourceDocs}
+                        fieldName={item.label}
+                      />
+                    )}
+                    {item.sourceDoc && (
+                      <ViewSourceLink onClick={() => handleViewSource(item)} />
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
