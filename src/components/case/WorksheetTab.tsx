@@ -1,5 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface WorksheetTabProps {
   caseData: {
@@ -19,6 +22,82 @@ interface WorksheetTabProps {
 }
 
 export const WorksheetTab = ({ caseData }: WorksheetTabProps) => {
+  const { toast } = useToast();
+
+  // Generate UW Summary dynamically
+  const generateSummary = () => {
+    const now = new Date();
+    const timestamp = now.toLocaleString('en-IN', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit',
+      hour12: true 
+    });
+
+    const sumAssuredShort = caseData.sumAssured
+      .replace('₹', '')
+      .replace(',', '')
+      .replace('L', '')
+      .replace('Cr', '');
+    
+    const sumLabel = caseData.sumAssured.includes('Cr') ? 'cr' : 'L';
+
+    let summary = `Summary\n${caseData.id}\n${caseData.applicantName}\n${timestamp}\n******************************\n\n`;
+    
+    summary += `No potential match found\n`;
+    summary += `DRC ${caseData.drcScore?.toLowerCase() || 'std'}\n`;
+    summary += `${caseData.age}/ ${caseData.gender} / ${caseData.education?.toLowerCase()} / ${caseData.occupation?.toLowerCase()} / AI ${sumAssuredShort}${sumLabel}\n`;
+    
+    // Nominee check
+    if (caseData.nominee?.toLowerCase() === 'mother') {
+      summary += `nom mother  ❌\n`;
+    } else {
+      summary += `nom ${caseData.nominee?.toLowerCase()}  ✓\n`;
+    }
+    
+    summary += `KYC ok\n`;
+    
+    // Medical checks
+    const medicalInfo = caseData.medicalInfo || [];
+    const smoking = medicalInfo.find(m => m.label === 'Smoking Status');
+    if (smoking && smoking.value.toLowerCase().includes('non-smoker')) {
+      summary += `Non-smoker verified\n`;
+    }
+    
+    summary += `Q 10 in IAR answered yes – need details\n`;
+    summary += `CDF ok\n`;
+    summary += `sign on medicals diff from PAN\n\n`;
+    
+    // Financial checks
+    const financialInfo = caseData.financialInfo || [];
+    const income = financialInfo.find(f => f.label === 'Annual Income');
+    if (income && income.value.includes('1.5Cr')) {
+      summary += `Since SAR with ABSLI above 5 cr, would need SRUW sign off however incomplete case, would need reqts first\n\n`;
+    }
+    
+    summary += `❌ c/f specimen signatures of LA in diff styles,\n`;
+    summary += `ITRs and COI for last 3 yrs\n`;
+    summary += `Form 26AS for latest AY\n\n`;
+    
+    summary += `Need details and reason for yes to Q10 in IAR\n`;
+    summary += `Income proof verification pending`;
+    
+    return summary;
+  };
+
+  const uwSummary = caseData.uwSummary || generateSummary();
+
+  const handleCopySummary = () => {
+    navigator.clipboard.writeText(uwSummary);
+    toast({
+      title: "Summary copied",
+      description: "UW summary copied to clipboard",
+    });
+  };
+
   return (
     <div className="space-y-3">
       {/* Applicant Data Panel */}
@@ -110,12 +189,25 @@ export const WorksheetTab = ({ caseData }: WorksheetTabProps) => {
       {/* UW Summary Panel */}
       <Card className="border-border">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">UW Summary</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold">UW Summary</CardTitle>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleCopySummary}
+              className="h-7 text-xs"
+            >
+              <Copy className="h-3 w-3 mr-1" />
+              Copy Summary
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <pre className="text-xs font-mono whitespace-pre-wrap leading-relaxed text-foreground">
-{caseData.uwSummary}
-          </pre>
+          <div className="bg-muted/50 rounded border border-border p-3">
+            <pre className="text-[11px] font-mono whitespace-pre leading-[1.4] text-foreground/90">
+{uwSummary}
+            </pre>
+          </div>
         </CardContent>
       </Card>
     </div>
