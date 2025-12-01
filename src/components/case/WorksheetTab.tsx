@@ -65,19 +65,8 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
     });
   };
 
-  // Generate UW Summary dynamically
+  // Generate UW Summary as bullet list
   const generateSummary = () => {
-    const now = new Date();
-    const timestamp = now.toLocaleString('en-IN', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit',
-      hour12: true 
-    });
-
     const sumAssuredShort = caseData.sumAssured
       .replace('₹', '')
       .replace(',', '')
@@ -86,47 +75,39 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
     
     const sumLabel = caseData.sumAssured.includes('Cr') ? 'cr' : 'L';
 
-    let summary = `Summary\n${caseData.id}\n${caseData.applicantName}\n${timestamp}\n******************************\n\n`;
-    
-    summary += `No potential match found\n`;
-    summary += `DRC ${caseData.drcScore?.toLowerCase() || 'std'}\n`;
-    summary += `${caseData.age}/ ${caseData.gender} / ${caseData.education?.toLowerCase()} / ${caseData.occupation?.toLowerCase()} / AI ${sumAssuredShort}${sumLabel}\n`;
+    const bullets = [
+      '• No potential match found',
+      `• DRC: ${caseData.drcScore || 'Standard'}`,
+      `• ${caseData.age}/${caseData.gender}, ${caseData.education}, ${caseData.occupation}, AI ${sumAssuredShort}${sumLabel}`,
+    ];
     
     // Nominee check
     if (caseData.nominee?.toLowerCase() === 'mother') {
-      summary += `nom mother  ❌\n`;
+      bullets.push(`• Nominee: Mother ❌ mismatch`);
     } else {
-      summary += `nom ${caseData.nominee?.toLowerCase()}  ✓\n`;
+      bullets.push(`• Nominee: ${caseData.nominee} ✔️`);
     }
     
-    summary += `KYC ok\n`;
+    bullets.push('• KYC OK');
     
     // Medical checks
     const medicalInfo = caseData.medicalInfo || [];
     const smoking = medicalInfo.find(m => m.label === 'Smoking Status');
     if (smoking && smoking.value.toLowerCase().includes('non-smoker')) {
-      summary += `Non-smoker verified\n`;
+      bullets.push('• Non-smoker verified ✔️');
     }
     
-    summary += `Q 10 in IAR answered yes – need details\n`;
-    summary += `CDF ok\n`;
-    summary += `sign on medicals diff from PAN\n\n`;
+    bullets.push('• IAR Q8 answered "Yes" — needs detailed explanation');
+    bullets.push('• Signatures mismatch ❌');
     
     // Financial checks
     const financialInfo = caseData.financialInfo || [];
     const income = financialInfo.find(f => f.label === 'Annual Income');
-    if (income && income.value.includes('1.5Cr')) {
-      summary += `Since SAR with ABSLI above 5 cr, would need SRUW sign off however incomplete case, would need reqts first\n\n`;
+    if (income && income.value.includes('Pending')) {
+      bullets.push('• Income proof verification pending');
     }
     
-    summary += `❌ c/f specimen signatures of LA in diff styles,\n`;
-    summary += `ITRs and COI for last 3 yrs\n`;
-    summary += `Form 26AS for latest AY\n\n`;
-    
-    summary += `Need details and reason for yes to Q10 in IAR\n`;
-    summary += `Income proof verification pending`;
-    
-    return summary;
+    return bullets.join('\n');
   };
 
   const uwSummary = caseData.uwSummary || generateSummary();
@@ -310,8 +291,8 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="bg-muted/50 rounded border border-border p-3">
-            <pre className="text-[11px] font-mono whitespace-pre leading-[1.4] text-foreground/90">
+          <div className="bg-muted/50 rounded border border-border p-4 max-h-64 overflow-y-auto">
+            <pre className="text-xs font-mono whitespace-pre-wrap break-words leading-relaxed text-foreground">
 {uwSummary}
             </pre>
           </div>
