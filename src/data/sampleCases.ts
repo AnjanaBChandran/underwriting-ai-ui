@@ -1,5 +1,14 @@
 export type ConfidenceLevel = "High" | "Medium" | "Low" | "Unknown";
 
+interface Document {
+  name: string;
+  uploadDate: string;
+  path?: string;
+  quality?: "High" | "Medium" | "Low";
+  ocrConfidence?: "High" | "Medium" | "Low";
+  ocrScore?: number;
+}
+
 export interface ExtractedField {
   label: string;
   value: string;
@@ -13,6 +22,8 @@ export interface ExtractedField {
     width: number;
     height: number;
   };
+  evidenceSnippets?: { text: string; source: string; page?: number }[];
+  rationale?: string;
 }
 
 export interface Case {
@@ -33,7 +44,9 @@ export interface Case {
   uwSummary?: string;
   financialInfo?: ExtractedField[];
   medicalInfo?: ExtractedField[];
-  documents?: { name: string; uploadDate: string; path?: string }[];
+  documents?: Document[];
+  requiredDocuments?: string[];
+  missingDocuments?: string[];
   iibData?: { label: string; value: string }[];
   auditLogs?: { timestamp: string; user: string; action: string }[];
 }
@@ -85,7 +98,11 @@ Income proof verification pending`,
         confidencePercentage: 89,
         sourceDocs: ["Financial Statements"],
         sourceDoc: "Financial Statements",
-        highlightLocation: { x: 0.15, y: 0.25, width: 0.35, height: 0.08 }
+        highlightLocation: { x: 0.15, y: 0.25, width: 0.35, height: 0.08 },
+        evidenceSnippets: [
+          { text: "Annual Income: ₹1.5Cr", source: "Financial Statements", page: 2 }
+        ],
+        rationale: "The value was determined based on the highlighted text in the uploaded financial statement. The information appears clearly in the source document."
       },
       { 
         label: "Net Worth", 
@@ -94,7 +111,11 @@ Income proof verification pending`,
         confidencePercentage: 72,
         sourceDocs: ["Financial Statements"],
         sourceDoc: "Financial Statements",
-        highlightLocation: { x: 0.15, y: 0.45, width: 0.35, height: 0.08 }
+        highlightLocation: { x: 0.15, y: 0.45, width: 0.35, height: 0.08 },
+        evidenceSnippets: [
+          { text: "Net Worth: ₹21Cr", source: "Financial Statements", page: 3 }
+        ],
+        rationale: "Net worth value extracted from financial documents. Confidence is Medium due to partially unclear text in some sections."
       },
       { 
         label: "ITR Filed", 
@@ -103,7 +124,11 @@ Income proof verification pending`,
         confidencePercentage: 95,
         sourceDocs: ["Income Tax Returns"],
         sourceDoc: "Income Tax Returns",
-        highlightLocation: { x: 0.1, y: 0.15, width: 0.4, height: 0.1 }
+        highlightLocation: { x: 0.1, y: 0.15, width: 0.4, height: 0.1 },
+        evidenceSnippets: [
+          { text: "ITR Filed for AY 2021-22, 2022-23, 2023-24", source: "Income Tax Returns", page: 1 }
+        ],
+        rationale: "ITR filing records verified from uploaded income tax returns. All three years are clearly documented."
       },
       { 
         label: "Income Source", 
@@ -112,7 +137,11 @@ Income proof verification pending`,
         confidencePercentage: 68,
         sourceDocs: ["Financial Statements"],
         sourceDoc: "Financial Statements",
-        highlightLocation: { x: 0.15, y: 0.65, width: 0.3, height: 0.08 }
+        highlightLocation: { x: 0.15, y: 0.65, width: 0.3, height: 0.08 },
+        evidenceSnippets: [
+          { text: "Primary Income: Business Operations", source: "Financial Statements", page: 1 }
+        ],
+        rationale: "Income source identified from financial statements. Medium confidence due to document requiring cross-verification with other proofs."
       },
     ],
     medicalInfo: [
@@ -123,7 +152,11 @@ Income proof verification pending`,
         confidencePercentage: 92,
         sourceDocs: ["Medical Examination Report"],
         sourceDoc: "Medical Examination Report",
-        highlightLocation: { x: 0.1, y: 0.3, width: 0.25, height: 0.06 }
+        highlightLocation: { x: 0.1, y: 0.3, width: 0.25, height: 0.06 },
+        evidenceSnippets: [
+          { text: "BMI: 23.5 kg/m² (Normal Range)", source: "Medical Examination Report", page: 1 }
+        ],
+        rationale: "BMI value calculated and clearly documented in the medical examination report."
       },
       { 
         label: "Blood Pressure", 
@@ -132,7 +165,11 @@ Income proof verification pending`,
         confidencePercentage: 96,
         sourceDocs: ["Medical Examination Report"],
         sourceDoc: "Medical Examination Report",
-        highlightLocation: { x: 0.1, y: 0.42, width: 0.3, height: 0.06 }
+        highlightLocation: { x: 0.1, y: 0.42, width: 0.3, height: 0.06 },
+        evidenceSnippets: [
+          { text: "BP: 120/80 mmHg (Normal)", source: "Medical Examination Report", page: 1 }
+        ],
+        rationale: "Blood pressure reading is clearly visible and within normal range according to the medical examination report."
       },
       { 
         label: "Smoking Status", 
@@ -141,7 +178,11 @@ Income proof verification pending`,
         confidencePercentage: 58,
         sourceDocs: ["Medical Examination Report"],
         sourceDoc: "Medical Examination Report",
-        highlightLocation: { x: 0.1, y: 0.52, width: 0.35, height: 0.06 }
+        highlightLocation: { x: 0.1, y: 0.52, width: 0.35, height: 0.06 },
+        evidenceSnippets: [
+          { text: "Smoking Status: Non-smoker 10+ years", source: "Medical Examination Report", page: 2 }
+        ],
+        rationale: "Smoking status extracted from medical examination report. Low confidence due to poor document scan quality and unclear text."
       },
       { 
         label: "Medical History", 
@@ -150,15 +191,48 @@ Income proof verification pending`,
         confidencePercentage: 75,
         sourceDocs: ["Medical Examination Report"],
         sourceDoc: "Medical Examination Report",
-        highlightLocation: { x: 0.1, y: 0.68, width: 0.4, height: 0.1 }
+        highlightLocation: { x: 0.1, y: 0.68, width: 0.4, height: 0.1 },
+        evidenceSnippets: [
+          { text: "Past Medical History: No significant conditions reported", source: "Medical Examination Report", page: 2 }
+        ],
+        rationale: "Medical history extracted from the examination report. Medium confidence as this requires additional verification from patient declaration forms."
       },
     ],
     documents: [
-      { name: "Medical Examination Report", uploadDate: "2024-11-25", path: "/docs/medical_exam.jpg" },
-      { name: "Financial Statements", uploadDate: "2024-11-24", path: "/docs/financial_statements.jpg" },
-      { name: "Identity Verification", uploadDate: "2024-11-24", path: "/docs/identity_verification.jpg" },
-      { name: "Income Tax Returns", uploadDate: "2024-11-23" },
+      { 
+        name: "Medical Examination Report", 
+        uploadDate: "2024-11-25", 
+        path: "/docs/medical_exam.jpg",
+        quality: "Low",
+        ocrConfidence: "Low",
+        ocrScore: 58
+      },
+      { 
+        name: "Financial Statements", 
+        uploadDate: "2024-11-24", 
+        path: "/docs/financial_statements.jpg",
+        quality: "Medium",
+        ocrConfidence: "Medium",
+        ocrScore: 76
+      },
+      { 
+        name: "Identity Verification", 
+        uploadDate: "2024-11-24", 
+        path: "/docs/identity_verification.jpg",
+        quality: "High",
+        ocrConfidence: "High",
+        ocrScore: 94
+      },
+      { 
+        name: "Income Tax Returns", 
+        uploadDate: "2024-11-23",
+        quality: "High",
+        ocrConfidence: "High",
+        ocrScore: 91
+      },
     ],
+    requiredDocuments: ["Identity Verification", "Financial Statements", "Medical Examination Report", "Income Tax Returns", "Bank Statement"],
+    missingDocuments: ["Bank Statement"],
     iibData: [
       { label: "Previous Policy", value: "Term Plan - HDFC Life" },
       { label: "Policy Number", value: "HDFC/TP/2020/45678" },

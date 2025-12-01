@@ -13,6 +13,7 @@ import { AuditLogsTab } from "@/components/case/AuditLogsTab";
 import { ApproveDialog } from "@/components/case/ApproveDialog";
 import { DeclineDialog } from "@/components/case/DeclineDialog";
 import { RequestInfoDialog } from "@/components/case/RequestInfoDialog";
+import { ExplainExtractionPanel } from "@/components/case/ExplainExtractionPanel";
 import { useToast } from "@/hooks/use-toast";
 
 const CaseWorkspace = () => {
@@ -27,6 +28,8 @@ const CaseWorkspace = () => {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [requestInfoDialogOpen, setRequestInfoDialogOpen] = useState(false);
+  const [explainPanelOpen, setExplainPanelOpen] = useState(false);
+  const [explainField, setExplainField] = useState<any>(null);
   
   const [highlightedDoc, setHighlightedDoc] = useState<string | undefined>();
   const [highlight, setHighlight] = useState<any>();
@@ -124,6 +127,26 @@ const CaseWorkspace = () => {
 
   const handleClearHighlight = () => {
     setHighlight(undefined);
+    setHighlightedDoc(undefined);
+  };
+
+  const handleExplainExtraction = (field: any) => {
+    setExplainField(field);
+    setExplainPanelOpen(true);
+  };
+
+  const handleExplainViewSource = (docName: string) => {
+    if (explainField) {
+      handleViewSource(
+        explainField.sourceDoc,
+        {
+          fieldName: explainField.label,
+          value: explainField.value,
+          confidence: explainField.confidence || "Unknown",
+          ...explainField.highlightLocation
+        }
+      );
+    }
   };
 
   const getPriorityVariant = (priority: string) => {
@@ -174,6 +197,7 @@ const CaseWorkspace = () => {
                 selectedDocName={highlightedDoc}
                 highlight={highlight}
                 onClearHighlight={handleClearHighlight}
+                missingDocuments={caseData.missingDocuments}
               />
             </div>
           </ResizablePanel>
@@ -200,7 +224,11 @@ const CaseWorkspace = () => {
                 </TabsList>
 
                 <TabsContent value="worksheet">
-                  <WorksheetTab caseData={caseData} onViewSource={handleViewSource} />
+                  <WorksheetTab 
+                    caseData={caseData} 
+                    onViewSource={handleViewSource}
+                    onExplainExtraction={handleExplainExtraction}
+                  />
                 </TabsContent>
 
                 <TabsContent value="iib">
@@ -252,6 +280,18 @@ const CaseWorkspace = () => {
         open={requestInfoDialogOpen}
         onOpenChange={setRequestInfoDialogOpen}
         onConfirm={handleRequestInfo}
+      />
+
+      <ExplainExtractionPanel
+        isOpen={explainPanelOpen}
+        onClose={() => setExplainPanelOpen(false)}
+        fieldName={explainField?.label || ""}
+        value={explainField?.value || ""}
+        confidence={explainField?.confidence || "Unknown"}
+        sourceDocs={explainField?.sourceDocs || []}
+        evidenceSnippets={explainField?.evidenceSnippets || []}
+        rationale={explainField?.rationale}
+        onViewSource={handleExplainViewSource}
       />
     </div>
   );

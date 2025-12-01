@@ -5,6 +5,8 @@ import { Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfidenceIndicator, ConfidenceLevel } from "./ConfidenceIndicator";
 import { ViewSourceLink } from "./ViewSourceLink";
+import { Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ExtractedField {
   label: string;
@@ -19,6 +21,8 @@ interface ExtractedField {
     width: number;
     height: number;
   };
+  evidenceSnippets?: { text: string; source: string; page?: number }[];
+  rationale?: string;
 }
 
 interface WorksheetTabProps {
@@ -37,9 +41,10 @@ interface WorksheetTabProps {
     medicalInfo?: ExtractedField[];
   };
   onViewSource?: (docName: string, highlight: any) => void;
+  onExplainExtraction?: (field: ExtractedField) => void;
 }
 
-export const WorksheetTab = ({ caseData, onViewSource }: WorksheetTabProps) => {
+export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: WorksheetTabProps) => {
   const { toast } = useToast();
 
   const handleViewSource = (field: ExtractedField) => {
@@ -205,7 +210,25 @@ export const WorksheetTab = ({ caseData, onViewSource }: WorksheetTabProps) => {
                       />
                     )}
                     {item.sourceDoc && (
-                      <ViewSourceLink onClick={() => handleViewSource(item)} />
+                      <>
+                        <ViewSourceLink onClick={() => handleViewSource(item)} />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => onExplainExtraction?.(item)}
+                                className="inline-flex items-center ml-1.5 text-primary hover:text-primary/80 transition-colors"
+                                aria-label="Explain how this value was extracted"
+                              >
+                                <Info className="h-3 w-3" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">Explain how this value was extracted</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </>
                     )}
                   </div>
                 </div>
@@ -242,7 +265,25 @@ export const WorksheetTab = ({ caseData, onViewSource }: WorksheetTabProps) => {
                       />
                     )}
                     {item.sourceDoc && (
-                      <ViewSourceLink onClick={() => handleViewSource(item)} />
+                      <>
+                        <ViewSourceLink onClick={() => handleViewSource(item)} />
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => onExplainExtraction?.(item)}
+                                className="inline-flex items-center ml-1.5 text-primary hover:text-primary/80 transition-colors"
+                                aria-label="Explain how this value was extracted"
+                              >
+                                <Info className="h-3 w-3" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">Explain how this value was extracted</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </>
                     )}
                   </div>
                 </div>
