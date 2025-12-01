@@ -217,7 +217,7 @@ const CaseWorkspace = () => {
       <div className="flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Left Panel - Document Viewer */}
-          <ResizablePanel defaultSize={40} minSize={30}>
+          <ResizablePanel defaultSize={50} minSize={30}>
             <div className="h-full p-6">
               <DocumentViewer 
                 documents={caseData.documents || []} 
@@ -232,7 +232,7 @@ const CaseWorkspace = () => {
           <ResizableHandle withHandle />
 
           {/* Right Panel - Tabs */}
-          <ResizablePanel defaultSize={60} minSize={40}>
+          <ResizablePanel defaultSize={50} minSize={40}>
             <div className="h-full overflow-auto p-6 pb-24">
               <Tabs defaultValue="worksheet" className="space-y-4">
                 <TabsList>
