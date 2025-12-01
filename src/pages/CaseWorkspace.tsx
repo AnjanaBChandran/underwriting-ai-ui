@@ -62,7 +62,7 @@ const CaseWorkspace = () => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Left Panel - Document Viewer */}
           <ResizablePanel defaultSize={40} minSize={30}>
@@ -75,7 +75,7 @@ const CaseWorkspace = () => {
 
           {/* Right Panel - Tabs */}
           <ResizablePanel defaultSize={60} minSize={40}>
-            <div className="h-full p-6">
+            <div className="h-full overflow-auto p-6">
               <Tabs defaultValue="worksheet" className="space-y-4">
                 <TabsList>
                   <TabsTrigger value="worksheet">
