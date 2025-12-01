@@ -35,6 +35,10 @@ export interface Case {
   status: "Pending" | "In Review" | "Approved" | "Declined";
   createdDate: string;
   updatedBy: string;
+  channel?: string;
+  product?: string;
+  ageing?: number;
+  policyNumber?: string;
   age?: number;
   gender?: string;
   education?: string;
@@ -61,6 +65,10 @@ export const sampleCases: Case[] = [
     status: "Pending",
     createdDate: "2024-11-28",
     updatedBy: "Michael Chen",
+    channel: "Agent",
+    product: "Term Life Insurance",
+    ageing: 3,
+    policyNumber: "POL-2024-001",
     age: 42,
     gender: "F",
     education: "Postgrad",
@@ -254,7 +262,11 @@ Income proof verification pending`,
     premium: "₹5,78,000/year",
     status: "In Review",
     createdDate: "2024-11-27",
-    updatedBy: "Emma Wilson"
+    updatedBy: "Emma Wilson",
+    channel: "Broker",
+    product: "Whole Life Insurance",
+    ageing: 4,
+    policyNumber: "POL-2024-002",
   },
   {
     id: "UW-2024-003",
@@ -264,7 +276,11 @@ Income proof verification pending`,
     premium: "₹15,87,000/year",
     status: "In Review",
     createdDate: "2024-11-26",
-    updatedBy: "David Park"
+    updatedBy: "David Park",
+    channel: "Online",
+    product: "Term Life Insurance",
+    ageing: 5,
+    policyNumber: "POL-2024-003",
   },
   {
     id: "UW-2024-004",
@@ -274,7 +290,11 @@ Income proof verification pending`,
     premium: "₹3,53,000/year",
     status: "Approved",
     createdDate: "2024-11-25",
-    updatedBy: "Sarah Mitchell"
+    updatedBy: "Sarah Mitchell",
+    channel: "Bancassurance",
+    product: "Investment-Linked Policy",
+    ageing: 6,
+    policyNumber: "POL-2024-004",
   },
   {
     id: "UW-2024-005",
@@ -284,7 +304,11 @@ Income proof verification pending`,
     premium: "₹7,35,000/year",
     status: "Pending",
     createdDate: "2024-11-24",
-    updatedBy: "James Anderson"
+    updatedBy: "James Anderson",
+    channel: "Agent",
+    product: "Critical Illness Cover",
+    ageing: 7,
+    policyNumber: "POL-2024-005",
   },
   {
     id: "UW-2024-006",
@@ -294,7 +318,11 @@ Income proof verification pending`,
     premium: "₹12,77,000/year",
     status: "In Review",
     createdDate: "2024-11-23",
-    updatedBy: "Michael Chen"
+    updatedBy: "Michael Chen",
+    channel: "Broker",
+    product: "Term Life Insurance",
+    ageing: 8,
+    policyNumber: "POL-2024-006",
   },
   {
     id: "UW-2024-007",
@@ -304,7 +332,11 @@ Income proof verification pending`,
     premium: "₹4,29,000/year",
     status: "Approved",
     createdDate: "2024-11-22",
-    updatedBy: "Emma Wilson"
+    updatedBy: "Emma Wilson",
+    channel: "Online",
+    product: "Whole Life Insurance",
+    ageing: 9,
+    policyNumber: "POL-2024-007",
   },
   {
     id: "UW-2024-008",
@@ -314,6 +346,10 @@ Income proof verification pending`,
     premium: "₹6,43,000/year",
     status: "Declined",
     createdDate: "2024-11-21",
-    updatedBy: "David Park"
+    updatedBy: "David Park",
+    channel: "Agent",
+    product: "Investment-Linked Policy",
+    ageing: 10,
+    policyNumber: "POL-2024-008",
   }
 ];
