@@ -149,7 +149,7 @@ const CaseWorkspace = () => {
     }
   };
 
-  const getPriorityVariant = (priority: string) => {
+  const getPriorityVariant = (priority: string): "destructive" | "default" | "secondary" => {
     switch (priority) {
       case "High":
         return "destructive";
@@ -159,6 +159,21 @@ const CaseWorkspace = () => {
         return "secondary";
       default:
         return "default";
+    }
+  };
+
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case "Pending":
+        return "secondary";
+      case "In Review":
+        return "default";
+      case "Approved":
+        return "outline";
+      case "Declined":
+        return "destructive";
+      default:
+        return "outline";
     }
   };
 
@@ -173,15 +188,27 @@ const CaseWorkspace = () => {
               </Button>
               <FileText className="h-6 w-6 text-primary" />
               <div>
-                <h1 className="text-xl font-bold">{caseData.id}</h1>
+                <h1 className="text-lg font-bold">{caseData.id}</h1>
                 <p className="text-sm text-muted-foreground">{caseData.applicantName}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant={getPriorityVariant(caseData.priority)}>
+            <div className="flex items-center gap-2">
+              <Badge 
+                variant={getPriorityVariant(caseData.priority)}
+                className="font-medium"
+              >
                 {caseData.priority} Priority
               </Badge>
-              <span className="text-sm text-muted-foreground">{caseData.status}</span>
+              <Badge 
+                variant={getStatusVariant(caseData.status)}
+                className={`font-medium ${
+                  caseData.status === "Approved" 
+                    ? "bg-success/10 text-success border-success/20 hover:bg-success/20" 
+                    : ""
+                }`}
+              >
+                {caseData.status}
+              </Badge>
             </div>
           </div>
         </div>
@@ -243,20 +270,25 @@ const CaseWorkspace = () => {
 
             {/* Sticky Footer Bar */}
             <div className="fixed bottom-0 right-0 left-0 md:left-auto md:right-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 z-50">
-              <div className="container mx-auto px-6 py-3 flex justify-end gap-3">
+              <div className="container mx-auto px-6 py-4 flex justify-center gap-3">
                 <Button 
-                  variant="outline" 
+                  variant="secondary" 
                   onClick={() => setRequestInfoDialogOpen(true)}
+                  className="min-w-[140px]"
                 >
                   Request More Info
                 </Button>
                 <Button 
                   variant="destructive"
                   onClick={() => setDeclineDialogOpen(true)}
+                  className="min-w-[140px]"
                 >
                   Decline
                 </Button>
-                <Button onClick={() => setApproveDialogOpen(true)}>
+                <Button 
+                  onClick={() => setApproveDialogOpen(true)}
+                  className="min-w-[140px] bg-primary hover:bg-primary/90"
+                >
                   Approve
                 </Button>
               </div>
