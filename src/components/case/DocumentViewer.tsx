@@ -4,7 +4,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { FileText, ExternalLink, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { DocumentMetadataPanel } from "./DocumentMetadataPanel";
 
 interface Document {
   name: string;
@@ -41,7 +40,6 @@ export const DocumentViewer = ({
   missingDocuments = []
 }: DocumentViewerProps) => {
   const [selectedDoc, setSelectedDoc] = useState(documents[0]?.name || "");
-  const [showHighlights, setShowHighlights] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -106,145 +104,135 @@ export const DocumentViewer = ({
   };
 
   return (
-    <div className="h-full flex border border-border rounded-lg bg-muted/30">
-      {/* Left: Document Preview */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-border bg-card/50">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <h3 className="text-sm font-semibold">Document Viewer</h3>
-              {missingDocuments.length > 0 && (
-                <Badge variant="destructive" className="text-[10px] h-5">
-                  Missing: {missingDocuments.join(", ")}
-                </Badge>
-              )}
-            </div>
-            {highlight && onClearHighlight && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClearHighlight}
-                className="h-6 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3 w-3 mr-1" />
-                Clear highlight
-              </Button>
+    <div className="h-full flex flex-col border border-border rounded-lg bg-muted/30">
+      {/* Header */}
+      <div className="p-4 border-b border-border bg-card/50">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-4">
+            <h3 className="text-sm font-semibold">Document Viewer</h3>
+            {missingDocuments.length > 0 && (
+              <div className="flex gap-1">
+                {missingDocuments.map((doc, idx) => (
+                  <Badge key={idx} variant="destructive" className="text-[10px] h-5">
+                    Missing: {doc}
+                  </Badge>
+                ))}
+              </div>
             )}
           </div>
-          
-          {/* Document Health Banner */}
-          <div className="mb-3 p-2 rounded-md bg-muted/50 border border-border">
-            <div className="flex items-center gap-4 text-[10px]">
-              <span className="font-semibold text-muted-foreground">Document Health:</span>
-              <span className={getQualityColor(overallQuality)}>
-                {getQualityDot(overallQuality)} Quality: {overallQuality}
-              </span>
-              <span className={getQualityColor(overallOCR)}>
-                {getQualityDot(overallOCR)} OCR: {overallOCR}
-              </span>
-              {missingDocuments.length > 0 && (
-                <Badge variant="destructive" className="text-[10px] h-4">
-                  Missing Documents: {missingDocuments.length}
-                </Badge>
-              )}
-            </div>
-          </div>
-          <div className="flex gap-2 items-center">
-            <Select value={selectedDoc} onValueChange={setSelectedDoc}>
-              <SelectTrigger className="bg-background flex-1">
-                <SelectValue placeholder="Select document" />
-              </SelectTrigger>
-              <SelectContent>
-                {documents.map((doc) => {
-                  const isLowQuality = doc.quality === "Low" || doc.ocrConfidence === "Low";
-                  return (
-                    <SelectItem key={doc.name} value={doc.name}>
-                      <div className="flex items-center gap-2">
-                        {isLowQuality && <span className="text-red-600">❗</span>}
-                        <span>{doc.name}</span>
-                        {doc.quality && (
-                          <span className={`text-[10px] ${getQualityColor(doc.quality)}`}>
-                            — Quality: {doc.quality}
-                          </span>
-                        )}
-                        {doc.ocrConfidence && (
-                          <span className={`text-[10px] ${getQualityColor(doc.ocrConfidence)}`}>
-                            OCR: {doc.ocrConfidence}
-                            {doc.ocrScore && ` (${doc.ocrScore}%)`}
-                          </span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={handleOpenInNewTab}
-              disabled={!documentPath}
-              title="Open in New Tab"
+          {highlight && onClearHighlight && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearHighlight}
+              className="h-6 text-xs text-muted-foreground hover:text-foreground"
             >
-              <ExternalLink className="h-4 w-4" />
+              <X className="h-3 w-3 mr-1" />
+              Clear highlight
             </Button>
+          )}
+        </div>
+        
+        {/* Document Health Banner */}
+        <div className="mb-3 p-2 rounded-md bg-muted/50 border border-border">
+          <div className="flex items-center gap-4 text-[10px]">
+            <span className="font-semibold text-muted-foreground">Document Health:</span>
+            <span className={getQualityColor(overallQuality)}>
+              {getQualityDot(overallQuality)} Quality: {overallQuality}
+            </span>
+            <span className={getQualityColor(overallOCR)}>
+              {getQualityDot(overallOCR)} OCR: {overallOCR}
+            </span>
+            {missingDocuments.length > 0 && (
+              <Badge variant="destructive" className="text-[10px] h-4">
+                Missing Documents: {missingDocuments.length}
+              </Badge>
+            )}
           </div>
         </div>
-
-        {/* Document Preview Area */}
-        <ScrollArea className="flex-1" ref={scrollAreaRef}>
-          <div className="p-6">
-            {documentPath ? (
-              <div className="bg-background border border-border rounded-lg overflow-hidden relative">
-                <img 
-                  ref={imageRef}
-                  src={documentPath} 
-                  alt={selectedDoc}
-                  className="w-full h-auto"
-                />
-                {highlight && showHighlights && (
-                  <div
-                    className="absolute border-2 border-yellow-400 bg-yellow-400/20 pointer-events-none"
-                    style={{
-                      left: `${highlight.x * 100}%`,
-                      top: `${highlight.y * 100}%`,
-                      width: `${highlight.width * 100}%`,
-                      height: `${highlight.height * 100}%`,
-                    }}
-                  >
-                    <div className="absolute -top-6 left-0 right-0 flex justify-center">
-                      <Badge 
-                        variant="secondary" 
-                        className="text-[10px] bg-yellow-100 text-yellow-900 border-yellow-400 shadow-sm whitespace-nowrap"
-                      >
-                        AI extracted: {highlight.fieldName} = {highlight.value} (confidence: {highlight.confidence})
-                      </Badge>
+        <div className="flex gap-2 items-center">
+          <Select value={selectedDoc} onValueChange={setSelectedDoc}>
+            <SelectTrigger className="bg-background flex-1">
+              <SelectValue placeholder="Select document" />
+            </SelectTrigger>
+            <SelectContent>
+              {documents.map((doc) => {
+                const isLowQuality = doc.quality === "Low" || doc.ocrConfidence === "Low";
+                return (
+                  <SelectItem key={doc.name} value={doc.name}>
+                    <div className="flex items-center gap-2">
+                      {isLowQuality && <span className="text-red-600">❗</span>}
+                      <span>{doc.name}</span>
+                      {doc.quality && (
+                        <span className={`text-[10px] ${getQualityColor(doc.quality)}`}>
+                          — Quality: {doc.quality}
+                        </span>
+                      )}
+                      {doc.ocrConfidence && (
+                        <span className={`text-[10px] ${getQualityColor(doc.ocrConfidence)}`}>
+                          OCR: {doc.ocrConfidence}
+                          {doc.ocrScore && ` (${doc.ocrScore}%)`}
+                        </span>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="h-[700px] border border-border rounded bg-background flex flex-col items-center justify-center text-muted-foreground">
-                <FileText className="h-16 w-16 mb-4 opacity-50" />
-                <p className="text-sm">Preview not available</p>
-                <p className="text-xs mt-2">Extracted source shown as text below</p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={handleOpenInNewTab}
+            disabled={!documentPath}
+            title="Open in New Tab"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Right: Metadata Panel */}
-      <div className="w-64 border-l border-border bg-card/30">
-        <DocumentMetadataPanel
-          document={currentDocument}
-          detectedFields={8}
-          missingFields={missingDocuments.length}
-          showHighlights={showHighlights}
-          onToggleHighlights={() => setShowHighlights(!showHighlights)}
-        />
-      </div>
+      {/* Document Preview Area */}
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
+        <div className="p-4">
+          {documentPath ? (
+            <div className="bg-background border border-border rounded-lg overflow-hidden relative">
+              <img 
+                ref={imageRef}
+                src={documentPath} 
+                alt={selectedDoc}
+                className="w-full h-auto"
+              />
+              {highlight && (
+                <div
+                  className="absolute border-2 border-yellow-400 bg-yellow-400/20 pointer-events-none"
+                  style={{
+                    left: `${highlight.x * 100}%`,
+                    top: `${highlight.y * 100}%`,
+                    width: `${highlight.width * 100}%`,
+                    height: `${highlight.height * 100}%`,
+                  }}
+                >
+                  <div className="absolute -top-6 left-0 right-0 flex justify-center">
+                    <Badge 
+                      variant="secondary" 
+                      className="text-[10px] bg-yellow-100 text-yellow-900 border-yellow-400 shadow-sm whitespace-nowrap"
+                    >
+                      AI extracted: {highlight.fieldName} = {highlight.value} (confidence: {highlight.confidence})
+                    </Badge>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="h-[600px] border border-border rounded bg-background flex flex-col items-center justify-center text-muted-foreground">
+              <FileText className="h-16 w-16 mb-4 opacity-50" />
+              <p className="text-sm">Preview not available</p>
+              <p className="text-xs mt-2">Extracted source shown as text below</p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
     </div>
   );
 };
