@@ -9,6 +9,9 @@ interface Document {
   name: string;
   uploadDate: string;
   path?: string;
+  quality?: "High" | "Medium" | "Low";
+  ocrConfidence?: "High" | "Medium" | "Low";
+  ocrScore?: number;
 }
 
 interface Highlight {
@@ -26,13 +29,15 @@ interface DocumentViewerProps {
   selectedDocName?: string;
   highlight?: Highlight;
   onClearHighlight?: () => void;
+  missingDocuments?: string[];
 }
 
 export const DocumentViewer = ({ 
   documents, 
   selectedDocName, 
   highlight,
-  onClearHighlight 
+  onClearHighlight,
+  missingDocuments = []
 }: DocumentViewerProps) => {
   const [selectedDoc, setSelectedDoc] = useState(documents[0]?.name || "");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -60,6 +65,38 @@ export const DocumentViewer = ({
   const currentDocument = documents.find(doc => doc.name === selectedDoc);
   const documentPath = currentDocument?.path;
 
+  const getQualityColor = (quality?: string) => {
+    switch (quality) {
+      case "High": return "text-green-600";
+      case "Medium": return "text-yellow-600";
+      case "Low": return "text-red-600";
+      default: return "text-gray-500";
+    }
+  };
+
+  const getQualityDot = (quality?: string) => {
+    switch (quality) {
+      case "High": return "🟢";
+      case "Medium": return "🟡";
+      case "Low": return "🔴";
+      default: return "⚪";
+    }
+  };
+
+  // Calculate document health
+  const avgQuality = documents.reduce((acc, doc) => {
+    const score = doc.quality === "High" ? 3 : doc.quality === "Medium" ? 2 : doc.quality === "Low" ? 1 : 0;
+    return acc + score;
+  }, 0) / documents.length;
+  
+  const avgOCR = documents.reduce((acc, doc) => {
+    const score = doc.ocrConfidence === "High" ? 3 : doc.ocrConfidence === "Medium" ? 2 : doc.ocrConfidence === "Low" ? 1 : 0;
+    return acc + score;
+  }, 0) / documents.length;
+
+  const overallQuality = avgQuality >= 2.5 ? "High" : avgQuality >= 1.5 ? "Medium" : "Low";
+  const overallOCR = avgOCR >= 2.5 ? "High" : avgOCR >= 1.5 ? "Medium" : "Low";
+
   const handleOpenInNewTab = () => {
     if (documentPath) {
       window.open(documentPath, '_blank');
@@ -71,7 +108,18 @@ export const DocumentViewer = ({
       {/* Header */}
       <div className="p-4 border-b border-border bg-card/50">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold">Document Viewer</h3>
+          <div className="flex items-center gap-4">
+            <h3 className="text-sm font-semibold">Document Viewer</h3>
+            {missingDocuments.length > 0 && (
+              <div className="flex gap-1">
+                {missingDocuments.map((doc, idx) => (
+                  <Badge key={idx} variant="destructive" className="text-[10px] h-5">
+                    Missing: {doc}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
           {highlight && onClearHighlight && (
             <Button
               variant="ghost"
@@ -84,17 +132,52 @@ export const DocumentViewer = ({
             </Button>
           )}
         </div>
+        
+        {/* Document Health Banner */}
+        <div className="mb-3 p-2 rounded-md bg-muted/50 border border-border">
+          <div className="flex items-center gap-4 text-[10px]">
+            <span className="font-semibold text-muted-foreground">Document Health:</span>
+            <span className={getQualityColor(overallQuality)}>
+              {getQualityDot(overallQuality)} Quality: {overallQuality}
+            </span>
+            <span className={getQualityColor(overallOCR)}>
+              {getQualityDot(overallOCR)} OCR: {overallOCR}
+            </span>
+            {missingDocuments.length > 0 && (
+              <Badge variant="destructive" className="text-[10px] h-4">
+                Missing Documents: {missingDocuments.length}
+              </Badge>
+            )}
+          </div>
+        </div>
         <div className="flex gap-2 items-center">
           <Select value={selectedDoc} onValueChange={setSelectedDoc}>
             <SelectTrigger className="bg-background flex-1">
               <SelectValue placeholder="Select document" />
             </SelectTrigger>
             <SelectContent>
-              {documents.map((doc) => (
-                <SelectItem key={doc.name} value={doc.name}>
-                  {doc.name}
-                </SelectItem>
-              ))}
+              {documents.map((doc) => {
+                const isLowQuality = doc.quality === "Low" || doc.ocrConfidence === "Low";
+                return (
+                  <SelectItem key={doc.name} value={doc.name}>
+                    <div className="flex items-center gap-2">
+                      {isLowQuality && <span className="text-red-600">❗</span>}
+                      <span>{doc.name}</span>
+                      {doc.quality && (
+                        <span className={`text-[10px] ${getQualityColor(doc.quality)}`}>
+                          — Quality: {doc.quality}
+                        </span>
+                      )}
+                      {doc.ocrConfidence && (
+                        <span className={`text-[10px] ${getQualityColor(doc.ocrConfidence)}`}>
+                          OCR: {doc.ocrConfidence}
+                          {doc.ocrScore && ` (${doc.ocrScore}%)`}
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           <Button 
