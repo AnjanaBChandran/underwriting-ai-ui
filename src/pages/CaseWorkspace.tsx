@@ -14,6 +14,9 @@ import { ApproveDialog } from "@/components/case/ApproveDialog";
 import { DeclineDialog } from "@/components/case/DeclineDialog";
 import { RequestInfoDialog } from "@/components/case/RequestInfoDialog";
 import { ExplainExtractionPanel } from "@/components/case/ExplainExtractionPanel";
+import { AIInsightsPanel } from "@/components/case/AIInsightsPanel";
+import { RiskAssessmentPanel } from "@/components/case/RiskAssessmentPanel";
+import { DecisionConfirmDialog } from "@/components/case/DecisionConfirmDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const CaseWorkspace = () => {
@@ -30,6 +33,8 @@ const CaseWorkspace = () => {
   const [requestInfoDialogOpen, setRequestInfoDialogOpen] = useState(false);
   const [explainPanelOpen, setExplainPanelOpen] = useState(false);
   const [explainField, setExplainField] = useState<any>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"approve" | "decline" | null>(null);
   
   const [highlightedDoc, setHighlightedDoc] = useState<string | undefined>();
   const [highlight, setHighlight] = useState<any>();
@@ -68,6 +73,26 @@ const CaseWorkspace = () => {
       ...currentCase,
       auditLogs: [newLog, ...(currentCase.auditLogs || [])]
     });
+  };
+
+  const handleApproveClick = () => {
+    setPendingAction("approve");
+    setConfirmDialogOpen(true);
+  };
+
+  const handleDeclineClick = () => {
+    setPendingAction("decline");
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmAction = () => {
+    setConfirmDialogOpen(false);
+    if (pendingAction === "approve") {
+      setApproveDialogOpen(true);
+    } else if (pendingAction === "decline") {
+      setDeclineDialogOpen(true);
+    }
+    setPendingAction(null);
   };
 
   const handleApprove = (notes: string) => {
@@ -190,8 +215,8 @@ const CaseWorkspace = () => {
       <div className="flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Left Panel - Document Viewer */}
-          <ResizablePanel defaultSize={40} minSize={30}>
-            <div className="h-full p-6">
+          <ResizablePanel defaultSize={45} minSize={35}>
+            <div className="h-full p-6 space-y-4">
               <DocumentViewer 
                 documents={caseData.documents || []} 
                 selectedDocName={highlightedDoc}
@@ -199,14 +224,15 @@ const CaseWorkspace = () => {
                 onClearHighlight={handleClearHighlight}
                 missingDocuments={caseData.missingDocuments}
               />
+              <AIInsightsPanel missingDocuments={caseData.missingDocuments} />
             </div>
           </ResizablePanel>
 
           <ResizableHandle withHandle />
 
           {/* Right Panel - Tabs */}
-          <ResizablePanel defaultSize={60} minSize={40}>
-            <div className="h-full overflow-auto p-6 pb-24">
+          <ResizablePanel defaultSize={55} minSize={40}>
+            <div className="h-full overflow-auto p-6 pb-24 space-y-4">
               <Tabs defaultValue="worksheet" className="space-y-4">
                 <TabsList>
                   <TabsTrigger value="worksheet">
@@ -232,31 +258,39 @@ const CaseWorkspace = () => {
                 </TabsContent>
 
                 <TabsContent value="iib">
-                  <IIBTab iibData={caseData.iibData} />
+                  <IIBTab 
+                    iibData={caseData.iibData} 
+                    hasExistingPolicies={true}
+                    declaredNoPolicies={false}
+                  />
                 </TabsContent>
 
                 <TabsContent value="audit">
                   <AuditLogsTab auditLogs={caseData.auditLogs} caseData={caseData} />
                 </TabsContent>
               </Tabs>
+
+              <RiskAssessmentPanel />
             </div>
 
             {/* Sticky Footer Bar */}
-            <div className="fixed bottom-0 right-0 left-0 md:left-auto md:right-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 z-50">
-              <div className="container mx-auto px-6 py-3 flex justify-end gap-3">
+            <div className="fixed bottom-0 right-0 left-0 md:left-auto md:right-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 z-50 shadow-lg">
+              <div className="container mx-auto px-6 py-4 flex justify-end gap-3">
                 <Button 
                   variant="outline" 
                   onClick={() => setRequestInfoDialogOpen(true)}
+                  className="h-10"
                 >
                   Request More Info
                 </Button>
                 <Button 
                   variant="destructive"
-                  onClick={() => setDeclineDialogOpen(true)}
+                  onClick={handleDeclineClick}
+                  className="h-10"
                 >
                   Decline
                 </Button>
-                <Button onClick={() => setApproveDialogOpen(true)}>
+                <Button onClick={handleApproveClick} className="h-10">
                   Approve
                 </Button>
               </div>
@@ -292,6 +326,14 @@ const CaseWorkspace = () => {
         evidenceSnippets={explainField?.evidenceSnippets || []}
         rationale={explainField?.rationale}
         onViewSource={handleExplainViewSource}
+      />
+
+      <DecisionConfirmDialog
+        open={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        onConfirm={handleConfirmAction}
+        action={pendingAction || "approve"}
+        caseId={caseData.id}
       />
     </div>
   );
