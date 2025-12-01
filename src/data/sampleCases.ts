@@ -1,3 +1,20 @@
+export type ConfidenceLevel = "High" | "Medium" | "Low" | "Unknown";
+
+export interface ExtractedField {
+  label: string;
+  value: string;
+  confidence?: ConfidenceLevel;
+  confidencePercentage?: number;
+  sourceDocs?: string[];
+  sourceDoc?: string;
+  highlightLocation?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
 export interface Case {
   id: string;
   applicantName: string;
@@ -14,8 +31,8 @@ export interface Case {
   drcScore?: string;
   nominee?: string;
   uwSummary?: string;
-  financialInfo?: { label: string; value: string }[];
-  medicalInfo?: { label: string; value: string }[];
+  financialInfo?: ExtractedField[];
+  medicalInfo?: ExtractedField[];
   documents?: { name: string; uploadDate: string; path?: string }[];
   iibData?: { label: string; value: string }[];
   auditLogs?: { timestamp: string; user: string; action: string }[];
@@ -61,16 +78,80 @@ Form 26AS for latest AY
 Need details and reason for yes to Q8 in IAR
 Income proof verification pending`,
     financialInfo: [
-      { label: "Annual Income", value: "₹1.5Cr" },
-      { label: "Net Worth", value: "₹21Cr" },
-      { label: "ITR Filed", value: "Last 3 years available" },
-      { label: "Income Source", value: "Business Revenue" },
+      { 
+        label: "Annual Income", 
+        value: "₹1.5Cr",
+        confidence: "High",
+        confidencePercentage: 89,
+        sourceDocs: ["Financial Statements"],
+        sourceDoc: "Financial Statements",
+        highlightLocation: { x: 0.15, y: 0.25, width: 0.35, height: 0.08 }
+      },
+      { 
+        label: "Net Worth", 
+        value: "₹21Cr",
+        confidence: "Medium",
+        confidencePercentage: 72,
+        sourceDocs: ["Financial Statements"],
+        sourceDoc: "Financial Statements",
+        highlightLocation: { x: 0.15, y: 0.45, width: 0.35, height: 0.08 }
+      },
+      { 
+        label: "ITR Filed", 
+        value: "Last 3 years available",
+        confidence: "High",
+        confidencePercentage: 95,
+        sourceDocs: ["Income Tax Returns"],
+        sourceDoc: "Income Tax Returns",
+        highlightLocation: { x: 0.1, y: 0.15, width: 0.4, height: 0.1 }
+      },
+      { 
+        label: "Income Source", 
+        value: "Business Revenue",
+        confidence: "Medium",
+        confidencePercentage: 68,
+        sourceDocs: ["Financial Statements"],
+        sourceDoc: "Financial Statements",
+        highlightLocation: { x: 0.15, y: 0.65, width: 0.3, height: 0.08 }
+      },
     ],
     medicalInfo: [
-      { label: "BMI", value: "23.5 (Normal)" },
-      { label: "Blood Pressure", value: "120/80 mmHg" },
-      { label: "Smoking Status", value: "Non-smoker 10+ years" },
-      { label: "Medical History", value: "No significant conditions" },
+      { 
+        label: "BMI", 
+        value: "23.5 (Normal)",
+        confidence: "High",
+        confidencePercentage: 92,
+        sourceDocs: ["Medical Examination Report"],
+        sourceDoc: "Medical Examination Report",
+        highlightLocation: { x: 0.1, y: 0.3, width: 0.25, height: 0.06 }
+      },
+      { 
+        label: "Blood Pressure", 
+        value: "120/80 mmHg",
+        confidence: "High",
+        confidencePercentage: 96,
+        sourceDocs: ["Medical Examination Report"],
+        sourceDoc: "Medical Examination Report",
+        highlightLocation: { x: 0.1, y: 0.42, width: 0.3, height: 0.06 }
+      },
+      { 
+        label: "Smoking Status", 
+        value: "Non-smoker 10+ years",
+        confidence: "Low",
+        confidencePercentage: 58,
+        sourceDocs: ["Medical Examination Report"],
+        sourceDoc: "Medical Examination Report",
+        highlightLocation: { x: 0.1, y: 0.52, width: 0.35, height: 0.06 }
+      },
+      { 
+        label: "Medical History", 
+        value: "No significant conditions",
+        confidence: "Medium",
+        confidencePercentage: 75,
+        sourceDocs: ["Medical Examination Report"],
+        sourceDoc: "Medical Examination Report",
+        highlightLocation: { x: 0.1, y: 0.68, width: 0.4, height: 0.1 }
+      },
     ],
     documents: [
       { name: "Medical Examination Report", uploadDate: "2024-11-25", path: "/docs/medical_exam.jpg" },

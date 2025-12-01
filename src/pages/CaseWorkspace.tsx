@@ -27,6 +27,9 @@ const CaseWorkspace = () => {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [requestInfoDialogOpen, setRequestInfoDialogOpen] = useState(false);
+  
+  const [highlightedDoc, setHighlightedDoc] = useState<string | undefined>();
+  const [highlight, setHighlight] = useState<any>();
 
   const caseData = currentCase;
 
@@ -114,6 +117,15 @@ const CaseWorkspace = () => {
     });
   };
 
+  const handleViewSource = (docName: string, highlightData: any) => {
+    setHighlightedDoc(docName);
+    setHighlight(highlightData);
+  };
+
+  const handleClearHighlight = () => {
+    setHighlight(undefined);
+  };
+
   const getPriorityVariant = (priority: string) => {
     switch (priority) {
       case "High":
@@ -157,7 +169,12 @@ const CaseWorkspace = () => {
           {/* Left Panel - Document Viewer */}
           <ResizablePanel defaultSize={40} minSize={30}>
             <div className="h-full p-6">
-              <DocumentViewer documents={caseData.documents || []} />
+              <DocumentViewer 
+                documents={caseData.documents || []} 
+                selectedDocName={highlightedDoc}
+                highlight={highlight}
+                onClearHighlight={handleClearHighlight}
+              />
             </div>
           </ResizablePanel>
 
@@ -183,7 +200,7 @@ const CaseWorkspace = () => {
                 </TabsList>
 
                 <TabsContent value="worksheet">
-                  <WorksheetTab caseData={caseData} />
+                  <WorksheetTab caseData={caseData} onViewSource={handleViewSource} />
                 </TabsContent>
 
                 <TabsContent value="iib">
