@@ -16,7 +16,7 @@ export interface Case {
   uwSummary?: string;
   financialInfo?: { label: string; value: string }[];
   medicalInfo?: { label: string; value: string }[];
-  documents?: { name: string; uploadDate: string }[];
+  documents?: { name: string; uploadDate: string; path?: string }[];
   iibData?: { label: string; value: string }[];
   auditLogs?: { timestamp: string; user: string; action: string }[];
 }
@@ -67,9 +67,9 @@ Income proof verification pending`,
       { label: "Medical History", value: "No significant conditions" },
     ],
     documents: [
-      { name: "Medical Examination Report", uploadDate: "2024-11-25" },
-      { name: "Financial Statements", uploadDate: "2024-11-24" },
-      { name: "Identity Verification", uploadDate: "2024-11-24" },
+      { name: "Medical Examination Report", uploadDate: "2024-11-25", path: "/docs/medical_exam.jpg" },
+      { name: "Financial Statements", uploadDate: "2024-11-24", path: "/docs/financial_statements.jpg" },
+      { name: "Identity Verification", uploadDate: "2024-11-24", path: "/docs/identity_verification.jpg" },
       { name: "Income Tax Returns", uploadDate: "2024-11-23" },
     ],
     iibData: [
