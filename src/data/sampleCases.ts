@@ -26,8 +26,8 @@ export const sampleCases: Case[] = [
     id: "UW-2024-001",
     applicantName: "Sarah Johnson",
     priority: "High",
-    sumAssured: "$1,500,000",
-    premium: "$12,450/year",
+    sumAssured: "₹1.5Cr",
+    premium: "₹10,45,000/year",
     status: "Pending",
     createdDate: "2024-11-28",
     updatedBy: "Michael Chen",
@@ -41,22 +41,28 @@ export const sampleCases: Case[] = [
 UW-2024-001
 Sarah Johnson
 11/28/2024, 9:15:32 AM
-****************************
+******************************
+
 No potential match found
 DRC std
-42/ F / postgrad/ self empl / AI 15L
-nom mother ❌
+42/ F / postgrad/ self empl / AI 1.5cr
+nom mother  ❌
 KYC ok
 Q 8 in IAR answered yes – need details
 CDF ok
 sign on medicals matches PAN
+
 Since SAR with ABSLI above 5 cr, would need SRUW sign off however incomplete case, would need reqts first
-❌ c/f specimen signatures of LA in diff styles, ITRs and COI for last 3 yrs and form 26 AS for latest AY
+
+❌ c/f specimen signatures of LA in diff styles,
+ITRs and COI for last 3 yrs
+Form 26AS for latest AY
+
 Need details and reason for yes to Q8 in IAR
 Income proof verification pending`,
     financialInfo: [
-      { label: "Annual Income", value: "$180,000" },
-      { label: "Net Worth", value: "$2.5M" },
+      { label: "Annual Income", value: "₹1.5Cr" },
+      { label: "Net Worth", value: "₹21Cr" },
       { label: "ITR Filed", value: "Last 3 years available" },
       { label: "Income Source", value: "Business Revenue" },
     ],
@@ -75,7 +81,7 @@ Income proof verification pending`,
     iibData: [
       { label: "Previous Policy", value: "Term Plan - HDFC Life" },
       { label: "Policy Number", value: "HDFC/TP/2020/45678" },
-      { label: "Sum Assured", value: "$500,000" },
+      { label: "Sum Assured", value: "₹42L" },
       { label: "Status", value: "Active" },
       { label: "Premium Paid", value: "Regular - No defaults" },
     ],
@@ -89,8 +95,8 @@ Income proof verification pending`,
     id: "UW-2024-002",
     applicantName: "Robert Martinez",
     priority: "Medium",
-    sumAssured: "$750,000",
-    premium: "$6,890/year",
+    sumAssured: "₹63L",
+    premium: "₹5,78,000/year",
     status: "In Review",
     createdDate: "2024-11-27",
     updatedBy: "Emma Wilson"
@@ -99,8 +105,8 @@ Income proof verification pending`,
     id: "UW-2024-003",
     applicantName: "Jennifer Lee",
     priority: "High",
-    sumAssured: "$2,000,000",
-    premium: "$18,900/year",
+    sumAssured: "₹1.68Cr",
+    premium: "₹15,87,000/year",
     status: "In Review",
     createdDate: "2024-11-26",
     updatedBy: "David Park"
@@ -109,8 +115,8 @@ Income proof verification pending`,
     id: "UW-2024-004",
     applicantName: "Michael Thompson",
     priority: "Low",
-    sumAssured: "$500,000",
-    premium: "$4,200/year",
+    sumAssured: "₹42L",
+    premium: "₹3,53,000/year",
     status: "Approved",
     createdDate: "2024-11-25",
     updatedBy: "Sarah Mitchell"
@@ -119,8 +125,8 @@ Income proof verification pending`,
     id: "UW-2024-005",
     applicantName: "Emily Davis",
     priority: "Medium",
-    sumAssured: "$1,000,000",
-    premium: "$8,750/year",
+    sumAssured: "₹84L",
+    premium: "₹7,35,000/year",
     status: "Pending",
     createdDate: "2024-11-24",
     updatedBy: "James Anderson"
@@ -129,8 +135,8 @@ Income proof verification pending`,
     id: "UW-2024-006",
     applicantName: "Daniel Wilson",
     priority: "High",
-    sumAssured: "$1,750,000",
-    premium: "$15,200/year",
+    sumAssured: "₹1.47Cr",
+    premium: "₹12,77,000/year",
     status: "In Review",
     createdDate: "2024-11-23",
     updatedBy: "Michael Chen"
@@ -139,8 +145,8 @@ Income proof verification pending`,
     id: "UW-2024-007",
     applicantName: "Amanda Rodriguez",
     priority: "Low",
-    sumAssured: "$600,000",
-    premium: "$5,100/year",
+    sumAssured: "₹50L",
+    premium: "₹4,29,000/year",
     status: "Approved",
     createdDate: "2024-11-22",
     updatedBy: "Emma Wilson"
@@ -149,8 +155,8 @@ Income proof verification pending`,
     id: "UW-2024-008",
     applicantName: "Christopher Brown",
     priority: "Medium",
-    sumAssured: "$900,000",
-    premium: "$7,650/year",
+    sumAssured: "₹76L",
+    premium: "₹6,43,000/year",
     status: "Declined",
     createdDate: "2024-11-21",
     updatedBy: "David Park"
