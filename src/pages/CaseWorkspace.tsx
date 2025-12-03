@@ -272,13 +272,6 @@ const CaseWorkspace = () => {
             <div className="fixed bottom-0 right-0 left-0 md:left-auto md:right-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 z-50">
               <div className="container mx-auto px-6 py-4 flex justify-center gap-3">
                 <Button 
-                  variant="secondary" 
-                  onClick={() => setRequestInfoDialogOpen(true)}
-                  className="min-w-[140px]"
-                >
-                  Request More Info
-                </Button>
-                <Button 
                   variant="destructive"
                   onClick={() => setDeclineDialogOpen(true)}
                   className="min-w-[140px]"
