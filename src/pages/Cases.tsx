@@ -27,7 +27,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { sampleCases, Case, formatSAR, formatPremium } from "@/data/sampleCases";
+import { sampleCases, Case } from "@/data/sampleCases";
 import {
   FileText,
   Search,
@@ -42,15 +42,8 @@ import {
   ArrowDown,
 } from "lucide-react";
 
-type SortField = "policyNo" | "priority" | "planName" | "sar" | "premium" | "ageing" | "lastUpdDt";
+type SortField = "id" | "applicantName" | "priority" | "sumAssured" | "premium" | "status" | "createdDate" | "ageing";
 type SortOrder = "asc" | "desc" | null;
-
-const getGreeting = (): string => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 17) return "Good Afternoon";
-  return "Good Evening";
-};
 
 const Cases = () => {
   const navigate = useNavigate();
@@ -58,8 +51,9 @@ const Cases = () => {
   // State management
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [channelFilter, setChannelFilter] = useState<string>("all");
-  const [medicalFilter, setMedicalFilter] = useState<string>("all");
+  const [productFilter, setProductFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -70,16 +64,17 @@ const Cases = () => {
     let filtered = sampleCases.filter((caseItem) => {
       const matchesSearch =
         searchQuery === "" ||
-        caseItem.policyNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        caseItem.planName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        caseItem.lastAssignedID.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        caseItem.channelName.toLowerCase().includes(searchQuery.toLowerCase());
+        caseItem.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        caseItem.applicantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        caseItem.policyNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        caseItem.updatedBy.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesPriority = priorityFilter === "all" || caseItem.priority === priorityFilter;
-      const matchesChannel = channelFilter === "all" || caseItem.channelName.includes(channelFilter);
-      const matchesMedical = medicalFilter === "all" || caseItem.medical === medicalFilter;
+      const matchesStatus = statusFilter === "all" || caseItem.status === statusFilter;
+      const matchesChannel = channelFilter === "all" || caseItem.channel === channelFilter;
+      const matchesProduct = productFilter === "all" || caseItem.product === productFilter;
 
-      return matchesSearch && matchesPriority && matchesChannel && matchesMedical;
+      return matchesSearch && matchesPriority && matchesStatus && matchesChannel && matchesProduct;
     });
 
     // Sorting
@@ -88,20 +83,16 @@ const Cases = () => {
         let aVal: any = a[sortField];
         let bVal: any = b[sortField];
 
-        // Handle numerical comparisons
-        if (sortField === "sar" || sortField === "premium") {
-          aVal = parseFloat(a[sortField]) || 0;
-          bVal = parseFloat(b[sortField]) || 0;
-        }
-
+        // Handle numerical comparisons for ageing
         if (sortField === "ageing") {
-          aVal = a.ageing === "-" ? 0 : parseInt(a.ageing) || 0;
-          bVal = b.ageing === "-" ? 0 : parseInt(b.ageing) || 0;
+          aVal = a.ageing || 0;
+          bVal = b.ageing || 0;
         }
 
-        if (sortField === "lastUpdDt") {
-          aVal = new Date(a.lastUpdDt).getTime();
-          bVal = new Date(b.lastUpdDt).getTime();
+        // Handle date comparisons
+        if (sortField === "createdDate") {
+          aVal = new Date(a.createdDate).getTime();
+          bVal = new Date(b.createdDate).getTime();
         }
 
         if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
@@ -111,7 +102,7 @@ const Cases = () => {
     }
 
     return filtered;
-  }, [searchQuery, priorityFilter, channelFilter, medicalFilter, sortField, sortOrder]);
+  }, [searchQuery, priorityFilter, statusFilter, channelFilter, productFilter, sortField, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredCases.length / pageSize);
@@ -123,18 +114,19 @@ const Cases = () => {
   // KPI calculations
   const kpis = useMemo(() => ({
     total: sampleCases.length,
-    priority1: sampleCases.filter((c) => c.priority === "1").length,
-    priority2: sampleCases.filter((c) => c.priority === "2").length,
-    medicalCases: sampleCases.filter((c) => c.medical === "MEDICAL CASE").length,
-    highAgeing: sampleCases.filter((c) => parseInt(c.ageing) > 10).length,
+    pending: sampleCases.filter((c) => c.status === "Pending").length,
+    inReview: sampleCases.filter((c) => c.status === "In Review").length,
+    approved: sampleCases.filter((c) => c.status === "Approved").length,
+    highPriority: sampleCases.filter((c) => c.priority === "High").length,
   }), []);
 
   // Reset filters
   const resetFilters = () => {
     setSearchQuery("");
     setPriorityFilter("all");
+    setStatusFilter("all");
     setChannelFilter("all");
-    setMedicalFilter("all");
+    setProductFilter("all");
     setSortField(null);
     setSortOrder(null);
     setCurrentPage(1);
@@ -142,21 +134,18 @@ const Cases = () => {
 
   // Export functions
   const exportToCSV = () => {
-    const headers = ["PolicyNo", "Priority", "PlanName", "SAR", "Premium", "AdvisorLevel", "ChannelName", "Medical/NonMedical", "ResumptionDate", "LastUpdDt", "Ageing", "Activity", "LastAssignedID"];
+    const headers = ["Case ID", "Applicant Name", "Priority", "Status", "Sum Assured", "Premium", "Channel", "Product", "Ageing", "Created Date"];
     const rows = filteredCases.map((c) => [
-      c.policyNo,
+      c.id,
+      c.applicantName,
       c.priority,
-      c.planName,
-      c.sar,
+      c.status,
+      c.sumAssured,
       c.premium,
-      c.advisorLevel,
-      c.channelName,
-      c.medical,
-      c.resumptionDate,
-      c.lastUpdDt,
-      c.ageing,
-      c.activity,
-      c.lastAssignedID,
+      c.channel || "",
+      c.product || "",
+      c.ageing || "",
+      c.createdDate,
     ]);
 
     const csvContent = [
@@ -174,6 +163,8 @@ const Cases = () => {
   };
 
   const exportToExcel = () => {
+    // For Excel, we'll use the same CSV format but with .xlsx extension
+    // In a real implementation, you'd use a library like xlsx
     exportToCSV();
   };
 
@@ -201,17 +192,30 @@ const Cases = () => {
 
   const getPriorityVariant = (priority: string) => {
     switch (priority) {
-      case "1":
+      case "High":
         return "destructive";
-      case "2":
+      case "Medium":
         return "default";
-      default:
+      case "Low":
         return "secondary";
+      default:
+        return "default";
     }
   };
 
-  const handleCaseClick = (caseItem: Case) => {
-    navigate(`/case/${caseItem.id}`);
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "Approved":
+        return "default";
+      case "In Review":
+        return "secondary";
+      case "Pending":
+        return "outline";
+      case "Declined":
+        return "destructive";
+      default:
+        return "default";
+    }
   };
 
   return (
@@ -222,7 +226,7 @@ const Cases = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <FileText className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold">{getGreeting()}, Anjana</h1>
+              <h1 className="text-2xl font-bold">UW Kitty</h1>
             </div>
             <Button variant="outline" onClick={() => navigate("/")}>
               Logout
@@ -258,32 +262,8 @@ const Cases = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Priority 1</p>
-                  <p className="text-3xl font-bold text-destructive">{kpis.priority1}</p>
-                </div>
-                <AlertCircle className="h-8 w-8 text-destructive opacity-70" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Priority 2</p>
-                  <p className="text-3xl font-bold text-primary">{kpis.priority2}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-primary opacity-70" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Medical Cases</p>
-                  <p className="text-3xl font-bold text-warning">{kpis.medicalCases}</p>
+                  <p className="text-sm text-muted-foreground mb-1">Pending</p>
+                  <p className="text-3xl font-bold text-warning">{kpis.pending}</p>
                 </div>
                 <Clock className="h-8 w-8 text-warning opacity-70" />
               </div>
@@ -294,10 +274,34 @@ const Cases = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">High Ageing</p>
-                  <p className="text-3xl font-bold text-success">{kpis.highAgeing}</p>
+                  <p className="text-sm text-muted-foreground mb-1">In Review</p>
+                  <p className="text-3xl font-bold text-primary">{kpis.inReview}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-primary opacity-70" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Approved</p>
+                  <p className="text-3xl font-bold text-success">{kpis.approved}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-success opacity-70" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">High Priority</p>
+                  <p className="text-3xl font-bold text-destructive">{kpis.highPriority}</p>
+                </div>
+                <AlertCircle className="h-8 w-8 text-destructive opacity-70" />
               </div>
             </CardContent>
           </Card>
@@ -308,7 +312,7 @@ const Cases = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder="Search by Policy No, Plan Name, Channel, or Assigned ID..."
+              placeholder="Search by Case ID, Applicant Name, Policy Number, or Advisor..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 h-12 text-base"
@@ -328,8 +332,25 @@ const Cases = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="1">Priority 1</SelectItem>
-                    <SelectItem value="2">Priority 2</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1 min-w-[150px]">
+                <label className="text-sm font-medium mb-2 block">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="In Review">In Review</SelectItem>
+                    <SelectItem value="Approved">Approved</SelectItem>
+                    <SelectItem value="Declined">Declined</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -342,23 +363,26 @@ const Cases = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="DSF Individual Agent">DSF Individual Agent</SelectItem>
-                    <SelectItem value="D2C INSURANCE">D2C Insurance Broking</SelectItem>
-                    <SelectItem value="POLICY BAZAAR">Policy Bazaar</SelectItem>
+                    <SelectItem value="Agent">Agent</SelectItem>
+                    <SelectItem value="Broker">Broker</SelectItem>
+                    <SelectItem value="Online">Online</SelectItem>
+                    <SelectItem value="Bancassurance">Bancassurance</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex-1 min-w-[150px]">
-                <label className="text-sm font-medium mb-2 block">Medical/Non-Medical</label>
-                <Select value={medicalFilter} onValueChange={setMedicalFilter}>
+                <label className="text-sm font-medium mb-2 block">Product</label>
+                <Select value={productFilter} onValueChange={setProductFilter}>
                   <SelectTrigger>
                     <SelectValue placeholder="All" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="MEDICAL CASE">Medical Case</SelectItem>
-                    <SelectItem value="NON-MEDICAL CASE">Non-Medical Case</SelectItem>
+                    <SelectItem value="Term Life Insurance">Term Life Insurance</SelectItem>
+                    <SelectItem value="Whole Life Insurance">Whole Life Insurance</SelectItem>
+                    <SelectItem value="Investment-Linked Policy">Investment-Linked Policy</SelectItem>
+                    <SelectItem value="Critical Illness Cover">Critical Illness Cover</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -411,10 +435,16 @@ const Cases = () => {
             <Table>
               <TableHeader className="bg-muted/50 sticky top-0">
                 <TableRow>
-                  <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("policyNo")}>
+                  <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("id")}>
                     <div className="flex items-center">
-                      PolicyNo
-                      {getSortIcon("policyNo")}
+                      Case ID
+                      {getSortIcon("id")}
+                    </div>
+                  </TableHead>
+                  <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("applicantName")}>
+                    <div className="flex items-center">
+                      Applicant Name
+                      {getSortIcon("applicantName")}
                     </div>
                   </TableHead>
                   <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("priority")}>
@@ -423,16 +453,12 @@ const Cases = () => {
                       {getSortIcon("priority")}
                     </div>
                   </TableHead>
-                  <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("planName")}>
+                  <TableHead>Channel</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("sumAssured")}>
                     <div className="flex items-center">
-                      PlanName
-                      {getSortIcon("planName")}
-                    </div>
-                  </TableHead>
-                  <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("sar")}>
-                    <div className="flex items-center">
-                      SAR
-                      {getSortIcon("sar")}
+                      Sum Assured
+                      {getSortIcon("sumAssured")}
                     </div>
                   </TableHead>
                   <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("premium")}>
@@ -441,68 +467,70 @@ const Cases = () => {
                       {getSortIcon("premium")}
                     </div>
                   </TableHead>
-                  <TableHead>AdvisorLevel</TableHead>
-                  <TableHead>ChannelName</TableHead>
-                  <TableHead>Medical/NonMedical</TableHead>
-                  <TableHead>ResumptionDate</TableHead>
-                  <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("lastUpdDt")}>
+                  <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("status")}>
                     <div className="flex items-center">
-                      LastUpdDt
-                      {getSortIcon("lastUpdDt")}
+                      Status
+                      {getSortIcon("status")}
                     </div>
                   </TableHead>
                   <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("ageing")}>
                     <div className="flex items-center">
-                      Ageing
+                      Ageing (Days)
                       {getSortIcon("ageing")}
                     </div>
                   </TableHead>
-                  <TableHead>Activity</TableHead>
-                  <TableHead>LastAssignedID</TableHead>
+                  <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("createdDate")}>
+                    <div className="flex items-center">
+                      Created
+                      {getSortIcon("createdDate")}
+                    </div>
+                  </TableHead>
+                  <TableHead>Updated By</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedCases.map((caseItem) => (
                   <TableRow
                     key={caseItem.id}
-                    className="hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/30 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/case/${caseItem.id}`)}
                   >
+                    <TableCell className="font-medium">{caseItem.id}</TableCell>
+                    <TableCell className="font-medium">{caseItem.applicantName}</TableCell>
                     <TableCell>
-                      <button
-                        onClick={() => handleCaseClick(caseItem)}
-                        className="text-primary hover:underline font-medium"
-                      >
-                        {caseItem.policyNo}
-                      </button>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getPriorityVariant(caseItem.priority)}>
+                      <Badge variant={getPriorityVariant(caseItem.priority)} className="font-medium">
                         {caseItem.priority}
                       </Badge>
                     </TableCell>
-                    <TableCell className="max-w-[200px] truncate" title={caseItem.planName}>
-                      {caseItem.planName}
-                    </TableCell>
-                    <TableCell className="font-medium">{formatSAR(caseItem.sar)}</TableCell>
-                    <TableCell>{formatPremium(caseItem.premium)}</TableCell>
-                    <TableCell>{caseItem.advisorLevel}</TableCell>
-                    <TableCell className="max-w-[150px] truncate" title={caseItem.channelName}>
-                      {caseItem.channelName}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{caseItem.channel || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{caseItem.product || "—"}</TableCell>
+                    <TableCell className="font-medium">{caseItem.sumAssured}</TableCell>
+                    <TableCell className="text-muted-foreground">{caseItem.premium}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {caseItem.medical}
+                      <Badge variant={getStatusVariant(caseItem.status)} className="font-medium">
+                        {caseItem.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{caseItem.resumptionDate}</TableCell>
-                    <TableCell>{caseItem.lastUpdDt}</TableCell>
-                    <TableCell>
-                      <span className={parseInt(caseItem.ageing) > 10 ? "text-destructive font-medium" : ""}>
-                        {caseItem.ageing}
+                    <TableCell className="text-center">
+                      <span className={`font-medium ${(caseItem.ageing || 0) > 7 ? "text-destructive" : "text-muted-foreground"}`}>
+                        {caseItem.ageing || "—"}
                       </span>
                     </TableCell>
-                    <TableCell>{caseItem.activity}</TableCell>
-                    <TableCell className="font-mono text-sm">{caseItem.lastAssignedID}</TableCell>
+                    <TableCell className="text-muted-foreground">{caseItem.createdDate}</TableCell>
+                    <TableCell className="text-muted-foreground">{caseItem.updatedBy}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/case/${caseItem.id}`);
+                        }}
+                        className="h-8"
+                      >
+                        Open
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -521,17 +549,32 @@ const Cases = () => {
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(page)}
-                      isActive={currentPage === page}
-                      className="cursor-pointer"
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(pageNum)}
+                        isActive={currentPage === pageNum}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+
                 <PaginationItem>
                   <PaginationNext
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}

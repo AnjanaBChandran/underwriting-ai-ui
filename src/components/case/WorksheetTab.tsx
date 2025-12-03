@@ -28,12 +28,12 @@ interface ExtractedField {
 interface WorksheetTabProps {
   caseData: {
     id: string;
-    applicantName?: string;
+    applicantName: string;
     age?: number;
     gender?: string;
     education?: string;
     occupation?: string;
-    sumAssured?: string;
+    sumAssured: string;
     drcScore?: string;
     nominee?: string;
     uwSummary?: string;
