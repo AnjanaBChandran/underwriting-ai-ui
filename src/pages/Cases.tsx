@@ -45,6 +45,13 @@ import {
 type SortField = "id" | "applicantName" | "priority" | "sumAssured" | "premium" | "status" | "createdDate" | "ageing";
 type SortOrder = "asc" | "desc" | null;
 
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning, Anjana";
+  if (hour < 17) return "Good afternoon, Anjana";
+  return "Good evening, Anjana";
+};
+
 const Cases = () => {
   const navigate = useNavigate();
   
@@ -226,7 +233,7 @@ const Cases = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <FileText className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold">UW Kitty</h1>
+              <h1 className="text-2xl font-bold">{getGreeting()}</h1>
             </div>
             <Button variant="outline" onClick={() => navigate("/")}>
               Logout
@@ -437,7 +444,7 @@ const Cases = () => {
                 <TableRow>
                   <TableHead className="cursor-pointer hover:bg-muted" onClick={() => handleSort("id")}>
                     <div className="flex items-center">
-                      Case ID
+                      Policy No
                       {getSortIcon("id")}
                     </div>
                   </TableHead>

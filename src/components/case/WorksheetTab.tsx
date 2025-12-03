@@ -34,6 +34,9 @@ interface WorksheetTabProps {
     education?: string;
     occupation?: string;
     sumAssured: string;
+    premium: string;
+    product?: string;
+    channel?: string;
     drcScore?: string;
     nominee?: string;
     uwSummary?: string;
@@ -137,6 +140,10 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
         <CardContent className="pt-0">
           <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
             <div className="flex justify-between">
+              <span className="text-muted-foreground">Policy No:</span>
+              <span className="font-medium">{caseData.id}</span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-muted-foreground">Name:</span>
               <span className="font-medium">{caseData.applicantName}</span>
             </div>
@@ -145,8 +152,12 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
               <span className="font-medium">{caseData.age}/{caseData.gender}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Education:</span>
-              <span className="font-medium">{caseData.education}</span>
+              <span className="text-muted-foreground">Product:</span>
+              <span className="font-medium">{caseData.product || '—'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Channel:</span>
+              <span className="font-medium">{caseData.channel || '—'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Occupation:</span>
@@ -155,6 +166,10 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
             <div className="flex justify-between">
               <span className="text-muted-foreground">Sum Assured:</span>
               <span className="font-medium">{caseData.sumAssured}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Premium:</span>
+              <span className="font-medium">{caseData.premium}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Nominee:</span>
