@@ -30,6 +30,7 @@ interface DocumentViewerProps {
   highlight?: Highlight;
   onClearHighlight?: () => void;
   missingDocuments?: string[];
+  selectorRef?: React.RefObject<HTMLSelectElement>;
 }
 
 export const DocumentViewer = ({ 
@@ -37,7 +38,8 @@ export const DocumentViewer = ({
   selectedDocName, 
   highlight,
   onClearHighlight,
-  missingDocuments = []
+  missingDocuments = [],
+  selectorRef
 }: DocumentViewerProps) => {
   const [selectedDoc, setSelectedDoc] = useState(documents[0]?.name || "");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -152,7 +154,7 @@ export const DocumentViewer = ({
         </div>
         <div className="flex gap-2 items-center">
           <Select value={selectedDoc} onValueChange={setSelectedDoc}>
-            <SelectTrigger className="bg-background flex-1">
+            <SelectTrigger className="bg-background flex-1" ref={selectorRef as any}>
               <SelectValue placeholder="Select document" />
             </SelectTrigger>
             <SelectContent>
