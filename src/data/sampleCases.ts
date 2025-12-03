@@ -28,17 +28,27 @@ export interface ExtractedField {
 
 export interface Case {
   id: string;
-  applicantName: string;
-  priority: "High" | "Medium" | "Low";
-  sumAssured: string;
+  policyNo: string;
+  priority: string;
+  planName: string;
+  sar: string;
   premium: string;
-  status: "Pending" | "In Review" | "Approved" | "Declined";
-  createdDate: string;
-  updatedBy: string;
+  advisorLevel: string;
+  channelName: string;
+  medical: string;
+  resumptionDate: string;
+  lastUpdDt: string;
+  ageing: string;
+  activity: string;
+  lastAssignedID: string;
+  // Legacy fields for case workspace compatibility
+  applicantName?: string;
+  sumAssured?: string;
+  status?: "Pending" | "In Review" | "Approved" | "Declined";
+  createdDate?: string;
+  updatedBy?: string;
   channel?: string;
   product?: string;
-  ageing?: number;
-  policyNumber?: string;
   age?: number;
   gender?: string;
   education?: string;
@@ -55,301 +65,322 @@ export interface Case {
   auditLogs?: { timestamp: string; user: string; action: string }[];
 }
 
+// Helper function to format SAR to readable format (e.g., 25500000 → ₹2.55 Cr)
+export const formatSAR = (sar: string): string => {
+  const num = parseInt(sar, 10);
+  if (isNaN(num)) return sar;
+  if (num >= 10000000) {
+    return `₹${(num / 10000000).toFixed(2)} Cr`;
+  } else if (num >= 100000) {
+    return `₹${(num / 100000).toFixed(2)} L`;
+  }
+  return `₹${num.toLocaleString('en-IN')}`;
+};
+
+// Helper function to format Premium (e.g., 89897.53 → ₹89,898/year)
+export const formatPremium = (premium: string): string => {
+  const num = parseFloat(premium);
+  if (isNaN(num)) return premium;
+  return `₹${Math.round(num).toLocaleString('en-IN')}/year`;
+};
+
 export const sampleCases: Case[] = [
   {
     id: "UW-2024-001",
-    applicantName: "Sarah Johnson",
-    priority: "High",
-    sumAssured: "₹1.5Cr",
-    premium: "₹10,45,000/year",
-    status: "Pending",
-    createdDate: "2024-11-28",
-    updatedBy: "Michael Chen",
+    policyNo: "009976959",
+    priority: "1",
+    planName: "ABSLI Super Term-TERM Option",
+    sar: "25500000",
+    premium: "89897.53",
+    advisorLevel: "LEV5A",
+    channelName: "DSF Individual Agent",
+    medical: "MEDICAL CASE",
+    resumptionDate: "2025-10-04",
+    lastUpdDt: "2025-10-09",
+    ageing: "5",
+    activity: "UnderWriter",
+    lastAssignedID: "MIN338075",
+    // Legacy data for case workspace
+    applicantName: "Applicant - 009976959",
+    sumAssured: "₹2.55 Cr",
+    status: "In Review",
+    createdDate: "2025-10-04",
+    updatedBy: "MIN338075",
     channel: "Agent",
     product: "Term Life Insurance",
-    ageing: 3,
-    policyNumber: "POL-2024-001",
-    age: 42,
-    gender: "F",
-    education: "Postgrad",
-    occupation: "Self Employed",
+    age: 35,
+    gender: "M",
+    education: "Graduate",
+    occupation: "Employed",
     drcScore: "Standard",
-    nominee: "Mother",
+    nominee: "Spouse",
     uwSummary: `Summary
-UW-2024-001
-Sarah Johnson
-11/28/2024, 9:15:32 AM
+009976959
+ABSLI Super Term-TERM Option
+2025-10-09, 10:15:32 AM
 ******************************
 
-No potential match found
-DRC std
-42/ F / postgrad/ self empl / AI 1.5cr
-nom mother  ❌
-KYC ok
-Q 8 in IAR answered yes – need details
-CDF ok
-sign on medicals matches PAN
+• No potential match found
+• DRC: Standard
+• 35/M, Graduate, Employed, SAR ₹2.55 Cr
+• Nominee: Spouse ✔️
+• KYC OK
+• Medical Case - Examination Complete
+• Premium: ₹89,898/year
+• Channel: DSF Individual Agent
+• Advisor Level: LEV5A
 
-Since SAR with ABSLI above 5 cr, would need SRUW sign off however incomplete case, would need reqts first
-
-❌ c/f specimen signatures of LA in diff styles,
-ITRs and COI for last 3 yrs
-Form 26AS for latest AY
-
-Need details and reason for yes to Q8 in IAR
-Income proof verification pending`,
+✔️ All documents verified
+✔️ Medical clearance obtained`,
     financialInfo: [
       { 
-        label: "Annual Income", 
-        value: "₹1.5Cr",
-        confidence: "High",
-        confidencePercentage: 89,
-        sourceDocs: ["Financial Statements"],
-        sourceDoc: "Financial Statements",
-        highlightLocation: { x: 0.15, y: 0.25, width: 0.35, height: 0.08 },
-        evidenceSnippets: [
-          { text: "Annual Income: ₹1.5Cr", source: "Financial Statements", page: 2 }
-        ],
-        rationale: "The value was determined based on the highlighted text in the uploaded financial statement. The information appears clearly in the source document."
-      },
-      { 
-        label: "Net Worth", 
-        value: "₹21Cr",
-        confidence: "Medium",
-        confidencePercentage: 72,
-        sourceDocs: ["Financial Statements"],
-        sourceDoc: "Financial Statements",
-        highlightLocation: { x: 0.15, y: 0.45, width: 0.35, height: 0.08 },
-        evidenceSnippets: [
-          { text: "Net Worth: ₹21Cr", source: "Financial Statements", page: 3 }
-        ],
-        rationale: "Net worth value extracted from financial documents. Confidence is Medium due to partially unclear text in some sections."
-      },
-      { 
-        label: "ITR Filed", 
-        value: "Last 3 years available",
+        label: "Sum Assured", 
+        value: "₹2.55 Cr",
         confidence: "High",
         confidencePercentage: 95,
-        sourceDocs: ["Income Tax Returns"],
-        sourceDoc: "Income Tax Returns",
-        highlightLocation: { x: 0.1, y: 0.15, width: 0.4, height: 0.1 },
-        evidenceSnippets: [
-          { text: "ITR Filed for AY 2021-22, 2022-23, 2023-24", source: "Income Tax Returns", page: 1 }
-        ],
-        rationale: "ITR filing records verified from uploaded income tax returns. All three years are clearly documented."
+        sourceDocs: ["Application Form"],
+        sourceDoc: "Application Form",
       },
       { 
-        label: "Income Source", 
-        value: "Business Revenue",
-        confidence: "Medium",
-        confidencePercentage: 68,
-        sourceDocs: ["Financial Statements"],
-        sourceDoc: "Financial Statements",
-        highlightLocation: { x: 0.15, y: 0.65, width: 0.3, height: 0.08 },
-        evidenceSnippets: [
-          { text: "Primary Income: Business Operations", source: "Financial Statements", page: 1 }
-        ],
-        rationale: "Income source identified from financial statements. Medium confidence due to document requiring cross-verification with other proofs."
+        label: "Annual Premium", 
+        value: "₹89,898/year",
+        confidence: "High",
+        confidencePercentage: 98,
+        sourceDocs: ["Premium Schedule"],
+        sourceDoc: "Premium Schedule",
       },
     ],
     medicalInfo: [
       { 
-        label: "BMI", 
-        value: "23.5 (Normal)",
+        label: "Medical Status", 
+        value: "MEDICAL CASE",
         confidence: "High",
-        confidencePercentage: 92,
+        confidencePercentage: 100,
         sourceDocs: ["Medical Examination Report"],
         sourceDoc: "Medical Examination Report",
-        highlightLocation: { x: 0.1, y: 0.3, width: 0.25, height: 0.06 },
-        evidenceSnippets: [
-          { text: "BMI: 23.5 kg/m² (Normal Range)", source: "Medical Examination Report", page: 1 }
-        ],
-        rationale: "BMI value calculated and clearly documented in the medical examination report."
-      },
-      { 
-        label: "Blood Pressure", 
-        value: "120/80 mmHg",
-        confidence: "High",
-        confidencePercentage: 96,
-        sourceDocs: ["Medical Examination Report"],
-        sourceDoc: "Medical Examination Report",
-        highlightLocation: { x: 0.1, y: 0.42, width: 0.3, height: 0.06 },
-        evidenceSnippets: [
-          { text: "BP: 120/80 mmHg (Normal)", source: "Medical Examination Report", page: 1 }
-        ],
-        rationale: "Blood pressure reading is clearly visible and within normal range according to the medical examination report."
-      },
-      { 
-        label: "Smoking Status", 
-        value: "Non-smoker 10+ years",
-        confidence: "Low",
-        confidencePercentage: 58,
-        sourceDocs: ["Medical Examination Report"],
-        sourceDoc: "Medical Examination Report",
-        highlightLocation: { x: 0.1, y: 0.52, width: 0.35, height: 0.06 },
-        evidenceSnippets: [
-          { text: "Smoking Status: Non-smoker 10+ years", source: "Medical Examination Report", page: 2 }
-        ],
-        rationale: "Smoking status extracted from medical examination report. Low confidence due to poor document scan quality and unclear text."
-      },
-      { 
-        label: "Medical History", 
-        value: "No significant conditions",
-        confidence: "Medium",
-        confidencePercentage: 75,
-        sourceDocs: ["Medical Examination Report"],
-        sourceDoc: "Medical Examination Report",
-        highlightLocation: { x: 0.1, y: 0.68, width: 0.4, height: 0.1 },
-        evidenceSnippets: [
-          { text: "Past Medical History: No significant conditions reported", source: "Medical Examination Report", page: 2 }
-        ],
-        rationale: "Medical history extracted from the examination report. Medium confidence as this requires additional verification from patient declaration forms."
       },
     ],
     documents: [
-      { 
-        name: "Medical Examination Report", 
-        uploadDate: "2024-11-25", 
-        path: "/docs/medical_exam.jpg",
-        quality: "Low",
-        ocrConfidence: "Low",
-        ocrScore: 58
-      },
-      { 
-        name: "Financial Statements", 
-        uploadDate: "2024-11-24", 
-        path: "/docs/financial_statements.jpg",
-        quality: "Medium",
-        ocrConfidence: "Medium",
-        ocrScore: 76
-      },
-      { 
-        name: "Identity Verification", 
-        uploadDate: "2024-11-24", 
-        path: "/docs/identity_verification.jpg",
-        quality: "High",
-        ocrConfidence: "High",
-        ocrScore: 94
-      },
-      { 
-        name: "Income Tax Returns", 
-        uploadDate: "2024-11-23",
-        quality: "High",
-        ocrConfidence: "High",
-        ocrScore: 91
-      },
-    ],
-    requiredDocuments: ["Identity Verification", "Financial Statements", "Medical Examination Report", "Income Tax Returns", "Bank Statement"],
-    missingDocuments: ["Bank Statement"],
-    iibData: [
-      { label: "Previous Policy", value: "Term Plan - HDFC Life" },
-      { label: "Policy Number", value: "HDFC/TP/2020/45678" },
-      { label: "Sum Assured", value: "₹42L" },
-      { label: "Status", value: "Active" },
-      { label: "Premium Paid", value: "Regular - No defaults" },
+      { name: "Medical Examination Report", uploadDate: "2025-10-04", path: "/docs/medical_exam.jpg", quality: "High", ocrConfidence: "High", ocrScore: 92 },
+      { name: "Financial Statements", uploadDate: "2025-10-04", path: "/docs/financial_statements.jpg", quality: "High", ocrConfidence: "High", ocrScore: 94 },
+      { name: "Identity Verification", uploadDate: "2025-10-04", path: "/docs/identity_verification.jpg", quality: "High", ocrConfidence: "High", ocrScore: 96 },
     ],
     auditLogs: [
-      { timestamp: "2024-11-28 14:30", user: "Michael Chen", action: "Case assigned" },
-      { timestamp: "2024-11-27 16:45", user: "System", action: "Documents uploaded" },
-      { timestamp: "2024-11-27 10:20", user: "Sarah Johnson", action: "Application submitted" },
+      { timestamp: "2025-10-09 10:15", user: "MIN338075", action: "Case reviewed" },
+      { timestamp: "2025-10-04 09:30", user: "System", action: "Case assigned" },
     ],
   },
   {
     id: "UW-2024-002",
-    applicantName: "Robert Martinez",
-    priority: "Medium",
-    sumAssured: "₹63L",
-    premium: "₹5,78,000/year",
+    policyNo: "009986208",
+    priority: "2",
+    planName: "ABSLI DigiShield 2021 OPT1 T35 P35",
+    sar: "50000000",
+    premium: "314431.27",
+    advisorLevel: "LEV1",
+    channelName: "D2C INSURANCE BROKING PVT",
+    medical: "MEDICAL CASE",
+    resumptionDate: "2025-09-17",
+    lastUpdDt: "2025-10-09",
+    ageing: "22",
+    activity: "UnderWriter",
+    lastAssignedID: "MIN023395",
+    applicantName: "Applicant - 009986208",
+    sumAssured: "₹5.00 Cr",
     status: "In Review",
-    createdDate: "2024-11-27",
-    updatedBy: "Emma Wilson",
+    createdDate: "2025-09-17",
+    updatedBy: "MIN023395",
     channel: "Broker",
-    product: "Whole Life Insurance",
-    ageing: 4,
-    policyNumber: "POL-2024-002",
+    product: "Term Life Insurance",
+    uwSummary: `Summary
+009986208
+ABSLI DigiShield 2021 OPT1 T35 P35
+2025-10-09, 11:30:00 AM
+******************************
+
+• No potential match found
+• DRC: Standard
+• SAR ₹5.00 Cr - High Value Case
+• Nominee: To be verified
+• KYC OK
+• Medical Case - Pending Review
+• Premium: ₹3,14,431/year
+• Channel: D2C INSURANCE BROKING PVT
+• Advisor Level: LEV1
+
+⚠️ High ageing (22 days) - Priority attention needed
+❌ Medical reports pending verification`,
+    financialInfo: [
+      { label: "Sum Assured", value: "₹5.00 Cr", confidence: "High", confidencePercentage: 95 },
+      { label: "Annual Premium", value: "₹3,14,431/year", confidence: "High", confidencePercentage: 98 },
+    ],
+    documents: [
+      { name: "Medical Examination Report", uploadDate: "2025-09-17", path: "/docs/medical_exam.jpg", quality: "Medium", ocrConfidence: "Medium", ocrScore: 78 },
+      { name: "Financial Statements", uploadDate: "2025-09-17", path: "/docs/financial_statements.jpg", quality: "High", ocrConfidence: "High", ocrScore: 90 },
+    ],
+    auditLogs: [
+      { timestamp: "2025-10-09 11:30", user: "MIN023395", action: "Case under review" },
+      { timestamp: "2025-09-17 14:00", user: "System", action: "Case created" },
+    ],
   },
   {
     id: "UW-2024-003",
-    applicantName: "Jennifer Lee",
-    priority: "High",
-    sumAssured: "₹1.68Cr",
-    premium: "₹15,87,000/year",
-    status: "In Review",
-    createdDate: "2024-11-26",
-    updatedBy: "David Park",
+    policyNo: "009990346",
+    priority: "2",
+    planName: "ABSLI Super Term-TERM Option",
+    sar: "10000000",
+    premium: "33326.68",
+    advisorLevel: "LEV3",
+    channelName: "POLICY BAZAAR INSURANCE B",
+    medical: "MEDICAL CASE",
+    resumptionDate: "2025-10-09",
+    lastUpdDt: "2025-10-09",
+    ageing: "-",
+    activity: "UnderWriter",
+    lastAssignedID: "IN616792",
+    applicantName: "Applicant - 009990346",
+    sumAssured: "₹1.00 Cr",
+    status: "Pending",
+    createdDate: "2025-10-09",
+    updatedBy: "IN616792",
     channel: "Online",
     product: "Term Life Insurance",
-    ageing: 5,
-    policyNumber: "POL-2024-003",
+    uwSummary: `Summary
+009990346
+ABSLI Super Term-TERM Option
+2025-10-09, 09:00:00 AM
+******************************
+
+• No potential match found
+• DRC: Standard
+• SAR ₹1.00 Cr
+• Nominee: Pending verification
+• KYC OK
+• Medical Case - New submission
+• Premium: ₹33,327/year
+• Channel: POLICY BAZAAR INSURANCE B
+• Advisor Level: LEV3
+
+✔️ Fresh case - Same day submission
+⚠️ Awaiting document verification`,
+    financialInfo: [
+      { label: "Sum Assured", value: "₹1.00 Cr", confidence: "High", confidencePercentage: 95 },
+      { label: "Annual Premium", value: "₹33,327/year", confidence: "High", confidencePercentage: 98 },
+    ],
+    documents: [
+      { name: "Medical Examination Report", uploadDate: "2025-10-09", path: "/docs/medical_exam.jpg", quality: "High", ocrConfidence: "High", ocrScore: 88 },
+      { name: "Identity Verification", uploadDate: "2025-10-09", path: "/docs/identity_verification.jpg", quality: "High", ocrConfidence: "High", ocrScore: 95 },
+    ],
+    auditLogs: [
+      { timestamp: "2025-10-09 09:00", user: "IN616792", action: "Case assigned" },
+      { timestamp: "2025-10-09 08:45", user: "System", action: "Case created" },
+    ],
   },
   {
     id: "UW-2024-004",
-    applicantName: "Michael Thompson",
-    priority: "Low",
-    sumAssured: "₹42L",
-    premium: "₹3,53,000/year",
-    status: "Approved",
-    createdDate: "2024-11-25",
-    updatedBy: "Sarah Mitchell",
-    channel: "Bancassurance",
-    product: "Investment-Linked Policy",
-    ageing: 6,
-    policyNumber: "POL-2024-004",
+    policyNo: "009990675",
+    priority: "2",
+    planName: "ABSLI Super Term-TERM Option",
+    sar: "10000000",
+    premium: "71744",
+    advisorLevel: "LEV2",
+    channelName: "DSF Individual Agent",
+    medical: "MEDICAL CASE",
+    resumptionDate: "2025-10-06",
+    lastUpdDt: "2025-10-09",
+    ageing: "3",
+    activity: "UnderWriter",
+    lastAssignedID: "MIN023395",
+    applicantName: "Applicant - 009990675",
+    sumAssured: "₹1.00 Cr",
+    status: "In Review",
+    createdDate: "2025-10-06",
+    updatedBy: "MIN023395",
+    channel: "Agent",
+    product: "Term Life Insurance",
+    uwSummary: `Summary
+009990675
+ABSLI Super Term-TERM Option
+2025-10-09, 14:20:00 PM
+******************************
+
+• No potential match found
+• DRC: Standard
+• SAR ₹1.00 Cr
+• Nominee: Verified ✔️
+• KYC OK
+• Medical Case - Under Review
+• Premium: ₹71,744/year
+• Channel: DSF Individual Agent
+• Advisor Level: LEV2
+
+✔️ Documents complete
+⚠️ Medical report review in progress`,
+    financialInfo: [
+      { label: "Sum Assured", value: "₹1.00 Cr", confidence: "High", confidencePercentage: 95 },
+      { label: "Annual Premium", value: "₹71,744/year", confidence: "High", confidencePercentage: 98 },
+    ],
+    documents: [
+      { name: "Medical Examination Report", uploadDate: "2025-10-06", path: "/docs/medical_exam.jpg", quality: "High", ocrConfidence: "High", ocrScore: 91 },
+      { name: "Financial Statements", uploadDate: "2025-10-06", path: "/docs/financial_statements.jpg", quality: "High", ocrConfidence: "High", ocrScore: 93 },
+      { name: "Identity Verification", uploadDate: "2025-10-06", path: "/docs/identity_verification.jpg", quality: "High", ocrConfidence: "High", ocrScore: 97 },
+    ],
+    auditLogs: [
+      { timestamp: "2025-10-09 14:20", user: "MIN023395", action: "Medical review started" },
+      { timestamp: "2025-10-06 10:00", user: "System", action: "Case assigned" },
+    ],
   },
   {
     id: "UW-2024-005",
-    applicantName: "Emily Davis",
-    priority: "Medium",
-    sumAssured: "₹84L",
-    premium: "₹7,35,000/year",
+    policyNo: "009991418",
+    priority: "2",
+    planName: "ABSLI PoornaSuraksha Kawach OPT1 P24T24",
+    sar: "10000000",
+    premium: "9233.5",
+    advisorLevel: "LEV3",
+    channelName: "DSF Individual Agent",
+    medical: "MEDICAL CASE",
+    resumptionDate: "2025-10-06",
+    lastUpdDt: "2025-10-09",
+    ageing: "3",
+    activity: "UnderWriter",
+    lastAssignedID: "IN448403",
+    applicantName: "Applicant - 009991418",
+    sumAssured: "₹1.00 Cr",
     status: "Pending",
-    createdDate: "2024-11-24",
-    updatedBy: "James Anderson",
+    createdDate: "2025-10-06",
+    updatedBy: "IN448403",
     channel: "Agent",
     product: "Critical Illness Cover",
-    ageing: 7,
-    policyNumber: "POL-2024-005",
+    uwSummary: `Summary
+009991418
+ABSLI PoornaSuraksha Kawach OPT1 P24T24
+2025-10-09, 16:45:00 PM
+******************************
+
+• No potential match found
+• DRC: Standard
+• SAR ₹1.00 Cr
+• Nominee: Pending verification
+• KYC OK
+• Medical Case - Documents pending
+• Premium: ₹9,234/year
+• Channel: DSF Individual Agent
+• Advisor Level: LEV3
+
+⚠️ Awaiting additional documents
+❌ Medical history verification pending`,
+    financialInfo: [
+      { label: "Sum Assured", value: "₹1.00 Cr", confidence: "High", confidencePercentage: 95 },
+      { label: "Annual Premium", value: "₹9,234/year", confidence: "High", confidencePercentage: 98 },
+    ],
+    documents: [
+      { name: "Identity Verification", uploadDate: "2025-10-06", path: "/docs/identity_verification.jpg", quality: "High", ocrConfidence: "High", ocrScore: 94 },
+    ],
+    missingDocuments: ["Medical Examination Report", "Financial Statements"],
+    auditLogs: [
+      { timestamp: "2025-10-09 16:45", user: "IN448403", action: "Document request sent" },
+      { timestamp: "2025-10-06 11:30", user: "System", action: "Case assigned" },
+    ],
   },
-  {
-    id: "UW-2024-006",
-    applicantName: "Daniel Wilson",
-    priority: "High",
-    sumAssured: "₹1.47Cr",
-    premium: "₹12,77,000/year",
-    status: "In Review",
-    createdDate: "2024-11-23",
-    updatedBy: "Michael Chen",
-    channel: "Broker",
-    product: "Term Life Insurance",
-    ageing: 8,
-    policyNumber: "POL-2024-006",
-  },
-  {
-    id: "UW-2024-007",
-    applicantName: "Amanda Rodriguez",
-    priority: "Low",
-    sumAssured: "₹50L",
-    premium: "₹4,29,000/year",
-    status: "Approved",
-    createdDate: "2024-11-22",
-    updatedBy: "Emma Wilson",
-    channel: "Online",
-    product: "Whole Life Insurance",
-    ageing: 9,
-    policyNumber: "POL-2024-007",
-  },
-  {
-    id: "UW-2024-008",
-    applicantName: "Christopher Brown",
-    priority: "Medium",
-    sumAssured: "₹76L",
-    premium: "₹6,43,000/year",
-    status: "Declined",
-    createdDate: "2024-11-21",
-    updatedBy: "David Park",
-    channel: "Agent",
-    product: "Investment-Linked Policy",
-    ageing: 10,
-    policyNumber: "POL-2024-008",
-  }
 ];
