@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Info } from "lucide-react";
+import { Copy, Star, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfidenceIndicator, ConfidenceLevel } from "./ConfidenceIndicator";
 import { ViewSourceLink } from "./ViewSourceLink";
@@ -48,6 +49,7 @@ interface WorksheetTabProps {
 
 export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: WorksheetTabProps) => {
   const { toast } = useToast();
+  const [starRating, setStarRating] = useState(0);
 
   const handleViewSource = (field: ExtractedField) => {
     if (!onViewSource || !field.sourceDoc || !field.highlightLocation) {
@@ -313,6 +315,57 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
         </CardContent>
       </Card>
 
+      {/* AI Summary Feedback */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold">AI Summary Feedback</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-4">
+          {/* Star Rating */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">How accurate was this AI Summary?</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => {
+                    setStarRating(star);
+                    toast({
+                      title: "Thanks! Feedback recorded.",
+                    });
+                  }}
+                  className="text-lg transition-colors hover:scale-110"
+                >
+                  <Star 
+                    className={`h-5 w-5 ${star <= starRating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/40'}`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Issue Flag Buttons */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Flag an issue (optional):</p>
+            <div className="flex flex-wrap gap-2">
+              {['Missing Info', 'Incorrect Data', 'Formatting Issue'].map((issue) => (
+                <Badge
+                  key={issue}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-secondary transition-colors text-xs px-3 py-1"
+                  onClick={() => {
+                    toast({
+                      title: "Issue flagged. Thanks for your feedback.",
+                    });
+                  }}
+                >
+                  {issue}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
