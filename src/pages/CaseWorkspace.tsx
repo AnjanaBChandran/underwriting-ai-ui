@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { sampleCases, Case } from "@/data/sampleCases";
-import { ArrowLeft, FileText, ClipboardList, Database, Clock } from "lucide-react";
+import { ArrowLeft, FileText, ClipboardList, Database, Clock, LogOut, Star } from "lucide-react";
 import { DocumentViewer } from "@/components/case/DocumentViewer";
 import { WorksheetTab } from "@/components/case/WorksheetTab";
 import { IIBTab } from "@/components/case/IIBTab";
@@ -16,10 +16,18 @@ import { RequestInfoDialog } from "@/components/case/RequestInfoDialog";
 import { ExplainExtractionPanel } from "@/components/case/ExplainExtractionPanel";
 import { useToast } from "@/hooks/use-toast";
 
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+};
+
 const CaseWorkspace = () => {
   const { caseId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const documentSelectorRef = useRef<HTMLSelectElement>(null);
   
   const [currentCase, setCurrentCase] = useState<Case | undefined>(
     sampleCases.find((c) => c.id === caseId)
@@ -33,6 +41,14 @@ const CaseWorkspace = () => {
   
   const [highlightedDoc, setHighlightedDoc] = useState<string | undefined>();
   const [highlight, setHighlight] = useState<any>();
+  const [feedbackRating, setFeedbackRating] = useState(0);
+
+  // Focus document selector on mount
+  useEffect(() => {
+    setTimeout(() => {
+      documentSelectorRef.current?.focus();
+    }, 100);
+  }, []);
 
   const caseData = currentCase;
 
@@ -59,7 +75,7 @@ const CaseWorkspace = () => {
 
     const newLog = {
       timestamp,
-      user: "DemoUnderwriter",
+      user: "Anjana",
       action: notes ? `${action} - ${notes}` : action,
       ...(extra && { extra })
     };
@@ -67,6 +83,21 @@ const CaseWorkspace = () => {
     setCurrentCase({
       ...currentCase,
       auditLogs: [newLog, ...(currentCase.auditLogs || [])]
+    });
+  };
+
+  const handleFeedbackRating = (stars: number) => {
+    setFeedbackRating(stars);
+    addAuditLog("User Feedback", `${stars} stars`);
+    toast({
+      title: "Thanks! Feedback recorded.",
+    });
+  };
+
+  const handleFeedbackFlag = (flag: string) => {
+    addAuditLog("User Feedback", `Flagged: ${flag}`);
+    toast({
+      title: "Issue flagged. Thanks for your feedback.",
     });
   };
 
@@ -149,6 +180,10 @@ const CaseWorkspace = () => {
     }
   };
 
+  const handleLogout = () => {
+    navigate("/login");
+  };
+
   const getPriorityVariant = (priority: string): "destructive" | "default" | "secondary" => {
     switch (priority) {
       case "High":
@@ -178,8 +213,9 @@ const CaseWorkspace = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b bg-card">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      {/* Header */}
+      <header className="border-b bg-card shrink-0">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -192,7 +228,10 @@ const CaseWorkspace = () => {
                 <p className="text-sm text-muted-foreground">{caseData.applicantName}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground hidden md:inline">
+                {getGreeting()}, Anjana
+              </span>
               <Badge 
                 variant={getPriorityVariant(caseData.priority)}
                 className="font-medium"
@@ -209,86 +248,164 @@ const CaseWorkspace = () => {
               >
                 {caseData.status}
               </Badge>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleLogout}
+                aria-label="Logout and return to sign in"
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
+      {/* Main Content - Two Column Layout */}
+      <div className="flex-1 min-h-0">
+        <ResizablePanelGroup 
+          direction="horizontal" 
+          className="h-full"
+          onLayout={(sizes) => {
+            // Optional: persist layout to localStorage
+          }}
+        >
           {/* Left Panel - Document Viewer */}
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <div className="h-full p-6">
+          <ResizablePanel defaultSize={50} minSize={25}>
+            <div className="h-full overflow-y-auto p-6">
               <DocumentViewer 
                 documents={caseData.documents || []} 
                 selectedDocName={highlightedDoc}
                 highlight={highlight}
                 onClearHighlight={handleClearHighlight}
                 missingDocuments={caseData.missingDocuments}
+                selectorRef={documentSelectorRef}
               />
             </div>
           </ResizablePanel>
 
-          <ResizableHandle withHandle />
+          <ResizableHandle 
+            withHandle 
+            className="w-2 bg-border/50 hover:bg-border transition-colors data-[resize-handle-active]:bg-primary/50"
+          />
 
           {/* Right Panel - Tabs */}
-          <ResizablePanel defaultSize={50} minSize={40}>
-            <div className="h-full overflow-auto p-6 pb-24">
-              <Tabs defaultValue="worksheet" className="space-y-4">
-                <TabsList>
-                  <TabsTrigger value="worksheet">
-                    <ClipboardList className="h-4 w-4 mr-2" />
-                    Worksheet
-                  </TabsTrigger>
-                  <TabsTrigger value="iib">
-                    <Database className="h-4 w-4 mr-2" />
-                    IIB
-                  </TabsTrigger>
-                  <TabsTrigger value="audit">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Audit Logs
-                  </TabsTrigger>
-                </TabsList>
+          <ResizablePanel defaultSize={50} minSize={25}>
+            <div className="h-full flex flex-col overflow-hidden">
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto p-6 pb-40">
+                <Tabs defaultValue="worksheet" className="space-y-4">
+                  <TabsList>
+                    <TabsTrigger value="worksheet">
+                      <ClipboardList className="h-4 w-4 mr-2" />
+                      Worksheet
+                    </TabsTrigger>
+                    <TabsTrigger value="iib">
+                      <Database className="h-4 w-4 mr-2" />
+                      IIB
+                    </TabsTrigger>
+                    <TabsTrigger value="audit">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Audit Logs
+                    </TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="worksheet">
-                  <WorksheetTab 
-                    caseData={caseData} 
-                    onViewSource={handleViewSource}
-                    onExplainExtraction={handleExplainExtraction}
-                  />
-                </TabsContent>
+                  <TabsContent value="worksheet">
+                    <WorksheetTab 
+                      caseData={caseData} 
+                      onViewSource={handleViewSource}
+                      onExplainExtraction={handleExplainExtraction}
+                    />
+                  </TabsContent>
 
-                <TabsContent value="iib">
-                  <IIBTab iibData={caseData.iibData} />
-                </TabsContent>
+                  <TabsContent value="iib">
+                    <IIBTab iibData={caseData.iibData} />
+                  </TabsContent>
 
-                <TabsContent value="audit">
-                  <AuditLogsTab auditLogs={caseData.auditLogs} caseData={caseData} />
-                </TabsContent>
-              </Tabs>
-            </div>
+                  <TabsContent value="audit">
+                    <AuditLogsTab auditLogs={caseData.auditLogs} caseData={caseData} />
+                  </TabsContent>
+                </Tabs>
+              </div>
 
-            {/* Sticky Footer Bar */}
-            <div className="fixed bottom-0 right-0 left-0 md:left-auto md:right-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 z-50">
-              <div className="container mx-auto px-6 py-4 flex justify-center gap-3">
-                <Button 
-                  variant="destructive"
-                  onClick={() => setDeclineDialogOpen(true)}
-                  className="min-w-[140px]"
-                >
-                  Decline
-                </Button>
-                <Button 
-                  onClick={() => setApproveDialogOpen(true)}
-                  className="min-w-[140px] bg-primary hover:bg-primary/90"
-                >
-                  Approve
-                </Button>
+              {/* Fixed Bottom Action Bar */}
+              <div className="shrink-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 p-4">
+                {/* Feedback Section */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">How accurate was this AI summary?</span>
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => handleFeedbackRating(star)}
+                            className="p-0.5 hover:scale-110 transition-transform"
+                            aria-label={`Rate ${star} stars`}
+                          >
+                            <Star 
+                              className={`h-4 w-4 ${star <= feedbackRating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/40 hover:text-muted-foreground'}`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {['Missing Info', 'Incorrect Data', 'Formatting Issue'].map((flag) => (
+                        <Button
+                          key={flag}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleFeedbackFlag(flag)}
+                          className="h-7 text-xs px-2"
+                        >
+                          {flag}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex justify-center gap-3">
+                  <Button 
+                    variant="destructive"
+                    onClick={() => setDeclineDialogOpen(true)}
+                    className="min-w-[140px]"
+                  >
+                    Decline
+                  </Button>
+                  <Button 
+                    onClick={() => setApproveDialogOpen(true)}
+                    className="min-w-[140px] bg-primary hover:bg-primary/90"
+                  >
+                    Approve
+                  </Button>
+                </div>
               </div>
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+
+      {/* Mobile fallback - stacked layout */}
+      <style>{`
+        @media (max-width: 768px) {
+          [data-panel-group-direction="horizontal"] {
+            flex-direction: column !important;
+          }
+          [data-panel-group-direction="horizontal"] > [data-panel] {
+            width: 100% !important;
+            height: auto !important;
+            min-height: 50vh;
+          }
+          [data-panel-group-direction="horizontal"] > [data-resize-handle] {
+            display: none;
+          }
+        }
+      `}</style>
 
       {/* Dialogs */}
       <ApproveDialog
