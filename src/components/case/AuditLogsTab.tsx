@@ -2,16 +2,19 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Download, Lock, FileText } from "lucide-react";
+import { Download, Lock, FileText, Bot, Server, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Case } from "@/data/sampleCases";
+
+type LogType = "ai" | "system" | "underwriter";
 
 interface AuditLog {
   timestamp: string;
   user: string;
   action: string;
+  type?: LogType;
+  description?: string;
   extra?: {
     requestedDocuments?: string[];
     riskClass?: string;
@@ -24,24 +27,107 @@ interface AuditLogsTabProps {
   caseData: Case;
 }
 
+// AI Agent logs based on document extraction
+const aiAgentLogs: AuditLog[] = [
+  {
+    timestamp: "28/11/2024, 09:15 AM",
+    user: "Document Intelligence Agent",
+    action: "Field Extraction",
+    type: "ai",
+    description: "Extracted income = ₹10,45,000 (Confidence 89%)"
+  },
+  {
+    timestamp: "28/11/2024, 09:14 AM",
+    user: "Document Intelligence Agent",
+    action: "Missing Document Flag",
+    type: "ai",
+    description: "Flagged missing document: Bank Statement"
+  },
+  {
+    timestamp: "28/11/2024, 09:13 AM",
+    user: "Medical Risk Agent",
+    action: "Health Data Extraction",
+    type: "ai",
+    description: "Extracted BMI = 23.5 (Normal)"
+  },
+  {
+    timestamp: "28/11/2024, 09:12 AM",
+    user: "Medical Risk Agent",
+    action: "Low Confidence Flag",
+    type: "ai",
+    description: "Flagged smoking status as Low Confidence (58%)"
+  },
+  {
+    timestamp: "28/11/2024, 09:10 AM",
+    user: "Summary Generator Agent",
+    action: "Summary Generation",
+    type: "ai",
+    description: "Generated UW summary draft"
+  },
+  {
+    timestamp: "28/11/2024, 09:05 AM",
+    user: "Document Intelligence Agent",
+    action: "Field Extraction",
+    type: "ai",
+    description: "Extracted applicant age = 35 years (Confidence 95%)"
+  }
+];
+
+// System logs
+const systemLogs: AuditLog[] = [
+  {
+    timestamp: "28/11/2024, 09:00 AM",
+    user: "System",
+    action: "Case Created",
+    type: "system",
+    description: "New case initiated from policy submission"
+  },
+  {
+    timestamp: "28/11/2024, 09:01 AM",
+    user: "System",
+    action: "Document Upload",
+    type: "system",
+    description: "3 documents received and queued for processing"
+  },
+  {
+    timestamp: "28/11/2024, 09:20 AM",
+    user: "System",
+    action: "Status Update",
+    type: "system",
+    description: "Case status changed to 'In Review'"
+  }
+];
+
 export const AuditLogsTab = ({ auditLogs = [], caseData }: AuditLogsTabProps) => {
   const { toast } = useToast();
   const [searchText, setSearchText] = useState("");
-  const [actionFilter, setActionFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | LogType>("all");
+
+  // Combine all logs and sort by timestamp
+  const allLogs = useMemo(() => {
+    const userLogs = auditLogs.map(log => ({
+      ...log,
+      type: "underwriter" as LogType
+    }));
+    return [...aiAgentLogs, ...systemLogs, ...userLogs].sort((a, b) => {
+      // Sort by timestamp descending (newest first)
+      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    });
+  }, [auditLogs]);
 
   const filteredLogs = useMemo(() => {
-    return auditLogs.filter((log) => {
+    return allLogs.filter((log) => {
       const matchesSearch = 
         log.user.toLowerCase().includes(searchText.toLowerCase()) ||
-        log.action.toLowerCase().includes(searchText.toLowerCase());
+        log.action.toLowerCase().includes(searchText.toLowerCase()) ||
+        (log.description?.toLowerCase().includes(searchText.toLowerCase()) ?? false);
 
-      const matchesAction = 
-        actionFilter === "all" ||
-        log.action.toLowerCase().includes(actionFilter.toLowerCase());
+      const matchesType = 
+        typeFilter === "all" || log.type === typeFilter;
 
-      return matchesSearch && matchesAction;
+      return matchesSearch && matchesType;
     });
-  }, [auditLogs, searchText, actionFilter]);
+  }, [allLogs, searchText, typeFilter]);
 
   const exportToCSV = () => {
     const now = new Date();
@@ -49,7 +135,6 @@ export const AuditLogsTab = ({ auditLogs = [], caseData }: AuditLogsTabProps) =>
     const timeStr = now.toTimeString().split(':').slice(0, 2).join('');
     const filename = `audit_${caseData.id}_${dateStr}_${timeStr}.csv`;
 
-    // CSV Header
     let csvContent = "# Case Audit Export\n";
     csvContent += `# Case ID: ${caseData.id}\n`;
     csvContent += `# Applicant: ${caseData.applicantName}\n`;
@@ -57,20 +142,13 @@ export const AuditLogsTab = ({ auditLogs = [], caseData }: AuditLogsTabProps) =>
     csvContent += `# Sum Assured: ${caseData.sumAssured}\n`;
     csvContent += `# Export Date: ${now.toISOString()}\n`;
     csvContent += "\n";
+    csvContent += "caseId,caseCreatedAt,auditTimestamp,type,action,actor,description,extra\n";
 
-    // Column headers
-    csvContent += "caseId,caseCreatedAt,auditTimestamp,auditTimestamp_human,action,actor,notes,extra\n";
-
-    // Data rows
-    auditLogs.forEach((log) => {
-      const [action, ...notesParts] = log.action.split(' - ');
-      const notes = notesParts.join(' - ') || '';
+    allLogs.forEach((log) => {
       const extra = log.extra ? JSON.stringify(log.extra).replace(/"/g, '""') : '';
-      
-      csvContent += `"${caseData.id}","${caseData.createdDate}","${log.timestamp}","${log.timestamp}","${action}","${log.user}","${notes}","${extra}"\n`;
+      csvContent += `"${caseData.id}","${caseData.createdDate}","${log.timestamp}","${log.type}","${log.action}","${log.user}","${log.description || ''}","${extra}"\n`;
     });
 
-    // Trigger download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -94,12 +172,33 @@ export const AuditLogsTab = ({ auditLogs = [], caseData }: AuditLogsTabProps) =>
     });
   };
 
-  const getActionBadgeVariant = (action: string) => {
+  const getTypeIcon = (type?: LogType) => {
+    switch (type) {
+      case "ai":
+        return <Bot className="h-4 w-4 text-primary" />;
+      case "system":
+        return <Server className="h-4 w-4 text-muted-foreground" />;
+      case "underwriter":
+      default:
+        return <User className="h-4 w-4 text-secondary-foreground" />;
+    }
+  };
+
+  const getActionBadgeVariant = (action: string, type?: LogType) => {
+    if (type === "ai") return "secondary";
+    if (type === "system") return "outline";
     if (action.toLowerCase().includes("approved")) return "default";
     if (action.toLowerCase().includes("declined")) return "destructive";
     if (action.toLowerCase().includes("requested")) return "secondary";
     return "outline";
   };
+
+  const filterChips: { label: string; value: "all" | LogType }[] = [
+    { label: "All Actions", value: "all" },
+    { label: "System Actions", value: "system" },
+    { label: "AI Agent Actions", value: "ai" },
+    { label: "Underwriter Actions", value: "underwriter" }
+  ];
 
   return (
     <Card>
@@ -132,54 +231,61 @@ export const AuditLogsTab = ({ auditLogs = [], caseData }: AuditLogsTabProps) =>
         </div>
       </CardHeader>
       <CardContent>
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        {/* Filter Chips */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {filterChips.map((chip) => (
+            <Badge
+              key={chip.value}
+              variant={typeFilter === chip.value ? "default" : "outline"}
+              className={`cursor-pointer px-3 py-1 text-xs transition-colors ${
+                typeFilter === chip.value 
+                  ? "bg-primary text-primary-foreground" 
+                  : "hover:bg-secondary"
+              }`}
+              onClick={() => setTypeFilter(chip.value)}
+            >
+              {chip.value === "ai" && <Bot className="h-3 w-3 mr-1" />}
+              {chip.value === "system" && <Server className="h-3 w-3 mr-1" />}
+              {chip.value === "underwriter" && <User className="h-3 w-3 mr-1" />}
+              {chip.label}
+            </Badge>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="mb-4">
           <Input
-            placeholder="Search by actor, action, or notes..."
+            placeholder="Search by actor, action, or description..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="flex-1"
+            className="w-full"
           />
-          <Select value={actionFilter} onValueChange={setActionFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Filter by action" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Actions</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="declined">Declined</SelectItem>
-              <SelectItem value="requested">More Info</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Audit Log Entries */}
         {filteredLogs && filteredLogs.length > 0 ? (
-          <div className="space-y-3">
-            {filteredLogs.map((log, idx) => {
-              const [action, ...notesParts] = log.action.split(' - ');
-              const notes = notesParts.join(' - ');
-              
-              return (
-                <div 
-                  key={idx} 
-                  className="flex flex-col gap-2 py-3 px-4 border rounded-md bg-muted/30"
-                >
-                  <div className="flex items-start justify-between gap-4">
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+            {filteredLogs.map((log, idx) => (
+              <div 
+                key={idx} 
+                className="flex flex-col gap-2 py-3 px-4 border rounded-lg bg-muted/30"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex gap-3 flex-1 min-w-0">
+                    <div className="mt-0.5 shrink-0">
+                      {getTypeIcon(log.type)}
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant={getActionBadgeVariant(action)}>
-                          {action}
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-sm font-medium">{log.user}</span>
+                        <Badge variant={getActionBadgeVariant(log.action, log.type)} className="text-xs">
+                          {log.action}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {log.timestamp}
-                        </span>
                       </div>
-                      <div className="text-sm font-medium">{log.user}</div>
-                      {notes && (
-                        <div className="text-sm text-muted-foreground mt-1">
-                          {notes}
-                        </div>
+                      {log.description && (
+                        <p className="text-sm text-muted-foreground">
+                          {log.description}
+                        </p>
                       )}
                       {log.extra?.requestedDocuments && (
                         <div className="text-xs text-muted-foreground mt-2">
@@ -193,31 +299,20 @@ export const AuditLogsTab = ({ auditLogs = [], caseData }: AuditLogsTabProps) =>
                           </div>
                         </div>
                       )}
-                      {(log.extra?.riskClass || log.extra?.extraPremium_pct) && (
-                        <div className="text-xs text-muted-foreground mt-2">
-                          {log.extra.riskClass && (
-                            <Badge variant="outline" className="mr-2">
-                              Risk: {log.extra.riskClass}
-                            </Badge>
-                          )}
-                          {log.extra.extraPremium_pct && (
-                            <Badge variant="outline">
-                              Extra Premium: {log.extra.extraPremium_pct}%
-                            </Badge>
-                          )}
-                        </div>
-                      )}
+                      <div className="text-xs text-muted-foreground mt-2">
+                        {log.timestamp}
+                      </div>
                     </div>
-                    <Lock className="h-3 w-3 text-muted-foreground shrink-0 mt-1" />
                   </div>
+                  <Lock className="h-3 w-3 text-muted-foreground shrink-0 mt-1" />
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         ) : (
           <div className="text-center py-8">
             <p className="text-sm text-muted-foreground">
-              {searchText || actionFilter !== "all" 
+              {searchText || typeFilter !== "all" 
                 ? "No audit logs match your filters" 
                 : "No audit logs available"}
             </p>
