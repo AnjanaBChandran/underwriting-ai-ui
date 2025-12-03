@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { sampleCases, Case } from "@/data/sampleCases";
-import { ArrowLeft, FileText, ClipboardList, Database, Clock } from "lucide-react";
+import { ArrowLeft, FileText, ClipboardList, Database, Clock, LogOut } from "lucide-react";
 import { DocumentViewer } from "@/components/case/DocumentViewer";
 import { WorksheetTab } from "@/components/case/WorksheetTab";
 import { IIBTab } from "@/components/case/IIBTab";
@@ -192,7 +192,7 @@ const CaseWorkspace = () => {
                 <p className="text-sm text-muted-foreground">{caseData.applicantName}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Badge 
                 variant={getPriorityVariant(caseData.priority)}
                 className="font-medium"
@@ -209,6 +209,14 @@ const CaseWorkspace = () => {
               >
                 {caseData.status}
               </Badge>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate("/")}
+                className="min-w-[100px]"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>
