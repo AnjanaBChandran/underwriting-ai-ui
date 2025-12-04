@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Copy, Star, Info, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfidenceLevel } from "./ConfidenceIndicator";
@@ -92,6 +93,7 @@ interface WorksheetTabProps {
 export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: WorksheetTabProps) => {
   const { toast } = useToast();
   const [starRating, setStarRating] = useState(0);
+  const [feedbackComment, setFeedbackComment] = useState("");
 
   const handleViewSource = (field: ExtractedField) => {
     if (!onViewSource || !field.sourceDoc || !field.highlightLocation) {
@@ -181,42 +183,48 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Policy No:</span>
-              <span className="font-medium">{caseData.id}</span>
+          <div className="grid grid-cols-2 gap-x-6 text-xs">
+            {/* Left Column */}
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Policy No:</span>
+                <span className="font-semibold text-foreground">{caseData.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Age/Gender:</span>
+                <span className="font-semibold text-foreground">{caseData.age}/{caseData.gender}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Channel:</span>
+                <span className="font-semibold text-foreground">{caseData.channel || '—'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Sum Assured:</span>
+                <span className="font-semibold text-foreground">{caseData.sumAssured}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Nominee:</span>
+                <span className="font-semibold text-foreground">{caseData.nominee}</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Name:</span>
-              <span className="font-medium">{caseData.applicantName}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Age/Gender:</span>
-              <span className="font-medium">{caseData.age}/{caseData.gender}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Product:</span>
-              <span className="font-medium">{caseData.product || '—'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Channel:</span>
-              <span className="font-medium">{caseData.channel || '—'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Occupation:</span>
-              <span className="font-medium">{caseData.occupation}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Sum Assured:</span>
-              <span className="font-medium">{caseData.sumAssured}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Premium:</span>
-              <span className="font-medium">{caseData.premium}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Nominee:</span>
-              <span className="font-medium">{caseData.nominee}</span>
+            {/* Right Column */}
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Name:</span>
+                <span className="font-semibold text-foreground">{caseData.applicantName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Product:</span>
+                <span className="font-semibold text-foreground">{caseData.product || '—'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Occupation:</span>
+                <span className="font-semibold text-foreground">{caseData.occupation}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Premium:</span>
+                <span className="font-semibold text-foreground">{caseData.premium}</span>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -371,6 +379,17 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
                 </Badge>
               ))}
             </div>
+          </div>
+
+          {/* Additional Comments */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Additional Comments (optional):</p>
+            <Textarea
+              placeholder="Write your comments here…"
+              value={feedbackComment}
+              onChange={(e) => setFeedbackComment(e.target.value)}
+              className="w-full min-h-[90px] max-h-[110px] rounded-lg border-border hover:border-primary/50 transition-colors text-sm resize-none"
+            />
           </div>
         </CardContent>
       </Card>
