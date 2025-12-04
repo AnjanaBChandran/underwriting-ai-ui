@@ -263,6 +263,21 @@ const CaseWorkspace = () => {
                     caseData={caseData} 
                     onViewSource={handleViewSource}
                     onExplainExtraction={handleExplainExtraction}
+                    onAddAuditLog={(log) => {
+                      if (!currentCase) return;
+                      setCurrentCase({
+                        ...currentCase,
+                        auditLogs: [
+                          {
+                            timestamp: log.timestamp,
+                            user: log.user,
+                            action: log.comment ? `${log.action}: ${log.comment}` : log.action,
+                          },
+                          ...(currentCase.auditLogs || [])
+                        ]
+                      });
+                    }}
+                    currentUser={{ id: "user_001", name: "DemoUnderwriter" }}
                   />
                 </TabsContent>
 

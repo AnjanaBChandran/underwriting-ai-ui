@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Star, Info, ExternalLink } from "lucide-react";
+import { Copy, Star, Info, ExternalLink, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfidenceLevel } from "./ConfidenceIndicator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -71,6 +71,7 @@ interface ExtractedField {
 interface WorksheetTabProps {
   caseData: {
     id: string;
+    policyNumber?: string;
     applicantName: string;
     age?: number;
     gender?: string;
@@ -88,12 +89,60 @@ interface WorksheetTabProps {
   };
   onViewSource?: (docName: string, highlight: any) => void;
   onExplainExtraction?: (field: ExtractedField) => void;
+  onAddAuditLog?: (log: {
+    timestamp: string;
+    user: string;
+    action: string;
+    comment?: string;
+    meta?: Record<string, any>;
+    immutable?: boolean;
+  }) => void;
+  currentUser?: { id: string; name: string };
 }
 
-export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: WorksheetTabProps) => {
+export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAddAuditLog, currentUser }: WorksheetTabProps) => {
   const { toast } = useToast();
   const [starRating, setStarRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [commentError, setCommentError] = useState("");
+
+  const handleSubmitComment = async () => {
+    // Validate
+    if (!feedbackComment.trim()) {
+      setCommentError("Please enter a comment to submit.");
+      return;
+    }
+    setCommentError("");
+    setIsSubmitting(true);
+
+    // Simulate async save
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // Save to audit log
+    const auditEntry = {
+      timestamp: new Date().toISOString(),
+      user: currentUser?.name || "Current User",
+      action: "Comment added",
+      comment: feedbackComment.trim(),
+      meta: {
+        case_id: caseData.id,
+        policy_no: caseData.policyNumber || caseData.id,
+        actor_id: currentUser?.id || "user_001",
+      },
+      immutable: true,
+    };
+
+    onAddAuditLog?.(auditEntry);
+
+    setIsSubmitting(false);
+    setFeedbackComment("");
+    
+    toast({
+      title: "Comment submitted.",
+      duration: 3000,
+    });
+  };
 
   const handleViewSource = (field: ExtractedField) => {
     if (!onViewSource || !field.sourceDoc || !field.highlightLocation) {
@@ -387,9 +436,26 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
             <Textarea
               placeholder="Write your comments here…"
               value={feedbackComment}
-              onChange={(e) => setFeedbackComment(e.target.value)}
-              className="w-full min-h-[90px] max-h-[110px] rounded-lg border-border hover:border-primary/50 transition-colors text-sm resize-none"
+              onChange={(e) => {
+                setFeedbackComment(e.target.value);
+                if (commentError) setCommentError("");
+              }}
+              className={`w-full min-h-[90px] max-h-[110px] rounded-lg border-border hover:border-primary/50 transition-colors text-sm resize-none ${commentError ? 'border-destructive' : ''}`}
             />
+            {commentError && (
+              <p className="text-xs text-destructive">{commentError}</p>
+            )}
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSubmitComment}
+                disabled={isSubmitting}
+                size="sm"
+                className="h-8 px-4 text-xs"
+              >
+                {isSubmitting && <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />}
+                Submit comment
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
