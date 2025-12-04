@@ -234,6 +234,7 @@ Income proof verification pending`,
       { 
         name: "Income Tax Returns", 
         uploadDate: "2024-11-23",
+        path: "/docs/income_tax_return.jpg",
         quality: "High",
         ocrConfidence: "High",
         ocrScore: 91
