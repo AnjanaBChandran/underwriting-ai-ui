@@ -2,12 +2,54 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Star, Info } from "lucide-react";
+import { Copy, Star, Info, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { ConfidenceIndicator, ConfidenceLevel } from "./ConfidenceIndicator";
-import { ViewSourceLink } from "./ViewSourceLink";
+import { ConfidenceLevel } from "./ConfidenceIndicator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+// Compact confidence dot component
+const ConfidenceDot = ({ percentage }: { percentage?: number }) => {
+  const pct = percentage ?? 0;
+  const color = pct >= 80 ? "bg-green-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500";
+  return (
+    <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+      <span className={`w-1.5 h-1.5 rounded-full ${color}`} />
+      <span>{pct}%</span>
+    </span>
+  );
+};
+
+// Compact source link
+const CompactSourceLink = ({ onClick, fieldName }: { onClick: () => void; fieldName: string }) => (
+  <button
+    onClick={onClick}
+    className="inline-flex items-center gap-0.5 text-[10px] text-primary hover:text-primary/80 transition-colors"
+    aria-label={`Open source document for ${fieldName}`}
+  >
+    <ExternalLink className="h-2 w-2" />
+    <span>Source</span>
+  </button>
+);
+
+// Compact info button
+const CompactInfoButton = ({ onClick, fieldName }: { onClick: () => void; fieldName: string }) => (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={onClick}
+          className="inline-flex items-center text-primary hover:text-primary/80 transition-colors"
+          aria-label={`Explain how ${fieldName} was extracted`}
+        >
+          <Info className="h-2.5 w-2.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p className="text-xs">Explain extraction</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
 interface ExtractedField {
   label: string;
   value: string;
@@ -182,52 +224,34 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
 
       {/* Financial Information Panel */}
       <Card className="border-border">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold">Financial Information</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
+          <div className="space-y-1">
             {caseData.financialInfo?.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-start">
-                <span className="text-muted-foreground">{item.label}:</span>
-                <div className="flex flex-col items-end gap-0.5">
-                  <div className="flex items-center gap-1">
-                    <span className="font-medium">{item.value}</span>
-                    {item.value.toLowerCase().includes('pending') && (
-                      <span className="text-destructive">❌</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {item.confidence && (
-                      <ConfidenceIndicator 
-                        level={item.confidence}
-                        percentage={item.confidencePercentage}
-                        sourceDocs={item.sourceDocs}
-                        fieldName={item.label}
-                      />
-                    )}
-                    {item.sourceDoc && (
-                      <>
-                        <ViewSourceLink onClick={() => handleViewSource(item)} />
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => onExplainExtraction?.(item)}
-                                className="inline-flex items-center ml-1.5 text-primary hover:text-primary/80 transition-colors"
-                                aria-label="Explain how this value was extracted"
-                              >
-                                <Info className="h-3 w-3" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">Explain how this value was extracted</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </>
-                    )}
-                  </div>
+              <div key={idx} className="flex items-center justify-between text-xs py-0.5 flex-wrap md:flex-nowrap gap-y-0.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-muted-foreground shrink-0">{item.label}:</span>
+                  <span className="font-semibold truncate">
+                    {item.value}
+                    {item.value.toLowerCase().includes('pending') && <span className="text-destructive ml-1">❌</span>}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                  {item.confidence && (
+                    <>
+                      <ConfidenceDot percentage={item.confidencePercentage} />
+                      <span className="text-border">|</span>
+                    </>
+                  )}
+                  {item.sourceDoc && (
+                    <>
+                      <CompactSourceLink onClick={() => handleViewSource(item)} fieldName={item.label} />
+                      <span className="text-border">|</span>
+                      <CompactInfoButton onClick={() => onExplainExtraction?.(item)} fieldName={item.label} />
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -237,52 +261,36 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction }: Wo
 
       {/* Medical Information Panel */}
       <Card className="border-border">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold">Medical Information</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs">
+          <div className="space-y-1">
             {caseData.medicalInfo?.map((item, idx) => (
-              <div key={idx} className="flex justify-between items-start">
-                <span className="text-muted-foreground">{item.label}:</span>
-                <div className="flex flex-col items-end gap-0.5">
-                  <div className="flex items-center gap-1">
-                    <span className="font-medium">{item.value}</span>
+              <div key={idx} className="flex items-center justify-between text-xs py-0.5 flex-wrap md:flex-nowrap gap-y-0.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-muted-foreground shrink-0">{item.label}:</span>
+                  <span className="font-semibold truncate">
+                    {item.value}
                     {(item.label === "Medical History" && item.value !== "No significant conditions") && (
-                      <span className="text-destructive">❌</span>
+                      <span className="text-destructive ml-1">❌</span>
                     )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {item.confidence && (
-                      <ConfidenceIndicator 
-                        level={item.confidence}
-                        percentage={item.confidencePercentage}
-                        sourceDocs={item.sourceDocs}
-                        fieldName={item.label}
-                      />
-                    )}
-                    {item.sourceDoc && (
-                      <>
-                        <ViewSourceLink onClick={() => handleViewSource(item)} />
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => onExplainExtraction?.(item)}
-                                className="inline-flex items-center ml-1.5 text-primary hover:text-primary/80 transition-colors"
-                                aria-label="Explain how this value was extracted"
-                              >
-                                <Info className="h-3 w-3" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">Explain how this value was extracted</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </>
-                    )}
-                  </div>
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                  {item.confidence && (
+                    <>
+                      <ConfidenceDot percentage={item.confidencePercentage} />
+                      <span className="text-border">|</span>
+                    </>
+                  )}
+                  {item.sourceDoc && (
+                    <>
+                      <CompactSourceLink onClick={() => handleViewSource(item)} fieldName={item.label} />
+                      <span className="text-border">|</span>
+                      <CompactInfoButton onClick={() => onExplainExtraction?.(item)} fieldName={item.label} />
+                    </>
+                  )}
                 </div>
               </div>
             ))}
