@@ -32,6 +32,21 @@ interface DocumentInfo {
   quality?: string;
 }
 
+interface IIBEntry {
+  policy_no: string;
+  company: string;
+  sum_assured: string;
+  match_status: string;
+  reason: string;
+  effective_date: string;
+  product_type: string;
+  medical_flag: string;
+  standard_life: string;
+  reason_decline: string;
+  reason_postpone: string;
+  reason_repudiation: string;
+}
+
 interface CaseData {
   id: string;
   policyNumber?: string;
@@ -53,6 +68,7 @@ interface CaseData {
   createdDate?: string;
   updatedBy?: string;
   auditLogs?: { timestamp: string; user: string; action: string }[];
+  iib?: IIBEntry[];
 }
 
 interface ExportOptions {
@@ -518,6 +534,14 @@ export const generateUWSummaryDoc = async (options: ExportOptions): Promise<stri
             ],
             spacing: { after: 200 },
           }),
+
+          // Section 10: IIB Information
+          new Paragraph({
+            heading: HeadingLevel.HEADING_1,
+            children: [new TextRun({ text: "10. IIB Information", bold: true })],
+            spacing: { before: 400, after: 200 },
+          }),
+          ...generateIIBSection(caseData.iib),
         ],
       },
     ],
@@ -554,4 +578,80 @@ function getKeyExtractionsForDoc(docName: string, caseData: CaseData): string {
   }
 
   return extractions.join("; ") || "-";
+}
+
+function generateIIBSection(iibData?: IIBEntry[]): (Paragraph | Table)[] {
+  if (!iibData || iibData.length === 0) {
+    return [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "No IIB records available for this applicant.",
+            size: 20,
+            italics: true,
+          }),
+        ],
+        spacing: { after: 200 },
+      }),
+    ];
+  }
+
+  const elements: (Paragraph | Table)[] = [];
+
+  iibData.forEach((entry, index) => {
+    if (iibData.length > 1) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `IIB Record ${index + 1}`,
+              bold: true,
+              size: 22,
+            }),
+          ],
+          spacing: { before: index > 0 ? 300 : 0, after: 100 },
+        })
+      );
+    }
+
+    const iibFields = [
+      { field: "Policy No", value: entry.policy_no },
+      { field: "Company", value: entry.company },
+      { field: "Sum Assured", value: entry.sum_assured },
+      { field: "Match Status", value: entry.match_status },
+      { field: "Reason", value: entry.reason },
+      { field: "Effective Date", value: entry.effective_date },
+      { field: "Product Type", value: entry.product_type },
+      { field: "Medical / Non-Medical", value: entry.medical_flag },
+      { field: "Standard Life", value: entry.standard_life },
+      { field: "Decline Reason", value: entry.reason_decline },
+      { field: "Postpone Reason", value: entry.reason_postpone },
+      { field: "Repudiation Reason", value: entry.reason_repudiation },
+    ];
+
+    elements.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              createHeaderCell("Field", 40),
+              createHeaderCell("Value", 60),
+            ],
+          }),
+          ...iibFields.map(
+            (item) =>
+              new TableRow({
+                children: [
+                  createCell(item.field, false, 40),
+                  createCell(item.value || "-", false, 60),
+                ],
+              })
+          ),
+        ],
+      })
+    );
+  });
+
+  return elements;
 }
