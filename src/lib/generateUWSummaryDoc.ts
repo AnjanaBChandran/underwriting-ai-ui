@@ -69,6 +69,7 @@ interface CaseData {
   updatedBy?: string;
   auditLogs?: { timestamp: string; user: string; action: string }[];
   iib?: IIBEntry[];
+  iibData?: { label: string; value: string }[];
 }
 
 interface ExportOptions {
@@ -541,7 +542,7 @@ export const generateUWSummaryDoc = async (options: ExportOptions): Promise<stri
             children: [new TextRun({ text: "10. IIB Information", bold: true })],
             spacing: { before: 400, after: 200 },
           }),
-          ...generateIIBSection(caseData.iib),
+          ...generateIIBSection(caseData.iib, caseData.iibData),
         ],
       },
     ],
@@ -580,8 +581,123 @@ function getKeyExtractionsForDoc(docName: string, caseData: CaseData): string {
   return extractions.join("; ") || "-";
 }
 
-function generateIIBSection(iibData?: IIBEntry[]): (Paragraph | Table)[] {
-  if (!iibData || iibData.length === 0) {
+function generateIIBSection(iibData?: IIBEntry[], iibSimpleData?: { label: string; value: string }[]): (Paragraph | Table)[] {
+  const elements: (Paragraph | Table)[] = [];
+
+  // First, add the simple IIB data (from UI display) if available
+  if (iibSimpleData && iibSimpleData.length > 0) {
+    elements.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "Insurance Information Bureau Summary",
+            bold: true,
+            size: 22,
+          }),
+        ],
+        spacing: { after: 100 },
+      })
+    );
+
+    elements.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              createHeaderCell("Field", 40),
+              createHeaderCell("Value", 60),
+            ],
+          }),
+          ...iibSimpleData.map(
+            (item) =>
+              new TableRow({
+                children: [
+                  createCell(item.label, false, 40),
+                  createCell(item.value || "-", false, 60),
+                ],
+              })
+          ),
+        ],
+      })
+    );
+  }
+
+  // Then, add detailed IIB entries if available
+  if (iibData && iibData.length > 0) {
+    if (elements.length > 0) {
+      elements.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Detailed IIB Records",
+              bold: true,
+              size: 22,
+            }),
+          ],
+          spacing: { before: 300, after: 100 },
+        })
+      );
+    }
+
+    iibData.forEach((entry, index) => {
+      if (iibData.length > 1) {
+        elements.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `IIB Record ${index + 1}`,
+                bold: true,
+                size: 20,
+              }),
+            ],
+            spacing: { before: index > 0 ? 200 : 0, after: 100 },
+          })
+        );
+      }
+
+      const iibFields = [
+        { field: "Policy No", value: entry.policy_no },
+        { field: "Company", value: entry.company },
+        { field: "Sum Assured", value: entry.sum_assured },
+        { field: "Match Status", value: entry.match_status },
+        { field: "Reason", value: entry.reason },
+        { field: "Effective Date", value: entry.effective_date },
+        { field: "Product Type", value: entry.product_type },
+        { field: "Medical / Non-Medical", value: entry.medical_flag },
+        { field: "Standard Life", value: entry.standard_life },
+        { field: "Decline Reason", value: entry.reason_decline },
+        { field: "Postpone Reason", value: entry.reason_postpone },
+        { field: "Repudiation Reason", value: entry.reason_repudiation },
+      ];
+
+      elements.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({
+              children: [
+                createHeaderCell("Field", 40),
+                createHeaderCell("Value", 60),
+              ],
+            }),
+            ...iibFields.map(
+              (item) =>
+                new TableRow({
+                  children: [
+                    createCell(item.field, false, 40),
+                    createCell(item.value || "-", false, 60),
+                  ],
+                })
+            ),
+          ],
+        })
+      );
+    });
+  }
+
+  // If no IIB data at all
+  if (elements.length === 0) {
     return [
       new Paragraph({
         children: [
@@ -595,63 +711,6 @@ function generateIIBSection(iibData?: IIBEntry[]): (Paragraph | Table)[] {
       }),
     ];
   }
-
-  const elements: (Paragraph | Table)[] = [];
-
-  iibData.forEach((entry, index) => {
-    if (iibData.length > 1) {
-      elements.push(
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `IIB Record ${index + 1}`,
-              bold: true,
-              size: 22,
-            }),
-          ],
-          spacing: { before: index > 0 ? 300 : 0, after: 100 },
-        })
-      );
-    }
-
-    const iibFields = [
-      { field: "Policy No", value: entry.policy_no },
-      { field: "Company", value: entry.company },
-      { field: "Sum Assured", value: entry.sum_assured },
-      { field: "Match Status", value: entry.match_status },
-      { field: "Reason", value: entry.reason },
-      { field: "Effective Date", value: entry.effective_date },
-      { field: "Product Type", value: entry.product_type },
-      { field: "Medical / Non-Medical", value: entry.medical_flag },
-      { field: "Standard Life", value: entry.standard_life },
-      { field: "Decline Reason", value: entry.reason_decline },
-      { field: "Postpone Reason", value: entry.reason_postpone },
-      { field: "Repudiation Reason", value: entry.reason_repudiation },
-    ];
-
-    elements.push(
-      new Table({
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        rows: [
-          new TableRow({
-            children: [
-              createHeaderCell("Field", 40),
-              createHeaderCell("Value", 60),
-            ],
-          }),
-          ...iibFields.map(
-            (item) =>
-              new TableRow({
-                children: [
-                  createCell(item.field, false, 40),
-                  createCell(item.value || "-", false, 60),
-                ],
-              })
-          ),
-        ],
-      })
-    );
-  });
 
   return elements;
 }

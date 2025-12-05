@@ -103,6 +103,7 @@ interface WorksheetTabProps {
     financialInfo?: ExtractedField[];
     medicalInfo?: ExtractedField[];
     iib?: IIBEntry[];
+    iibData?: { label: string; value: string }[];
   };
   onViewSource?: (docName: string, highlight: any) => void;
   onExplainExtraction?: (field: ExtractedField) => void;
@@ -136,6 +137,7 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
           createdDate: (caseData as any).createdDate,
           updatedBy: (caseData as any).updatedBy,
           iib: caseData.iib,
+          iibData: caseData.iibData,
         },
         userName: currentUser?.name || "Current User",
         starRating,
