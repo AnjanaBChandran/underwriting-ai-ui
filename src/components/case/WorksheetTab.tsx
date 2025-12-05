@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Star, Info, ExternalLink, Loader2 } from "lucide-react";
+import { Copy, Star, Info, ExternalLink, Loader2, Download } from "lucide-react";
+import { generateUWSummaryDoc } from "@/lib/generateUWSummaryDoc";
 import { useToast } from "@/hooks/use-toast";
 import { ConfidenceLevel } from "./ConfidenceIndicator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -106,6 +107,53 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
   const [feedbackComment, setFeedbackComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentError, setCommentError] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  const [feedbackFlags, setFeedbackFlags] = useState<string[]>([]);
+
+  const handleExportDoc = async () => {
+    setIsExporting(true);
+    try {
+      const exportId = await generateUWSummaryDoc({
+        caseData: {
+          ...caseData,
+          documents: (caseData as any).documents,
+          createdDate: (caseData as any).createdDate,
+          updatedBy: (caseData as any).updatedBy,
+        },
+        userName: currentUser?.name || "Current User",
+        starRating,
+        flags: feedbackFlags,
+        caseUrl: window.location.href,
+      });
+
+      // Log export to audit
+      onAddAuditLog?.({
+        timestamp: new Date().toISOString(),
+        user: currentUser?.name || "Current User",
+        action: "UW Summary exported",
+        meta: {
+          case_id: caseData.id,
+          policy_no: caseData.policyNumber || caseData.id,
+          export_id: exportId,
+          format: "docx",
+        },
+        immutable: true,
+      });
+
+      toast({
+        title: "Document exported",
+        description: "UW Summary downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Unable to generate document. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleSubmitComment = async () => {
     // Validate
@@ -360,15 +408,39 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold">UW Summary</CardTitle>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleCopySummary}
-              className="h-7 text-xs"
-            >
-              <Copy className="h-3 w-3 mr-1" />
-              Copy Summary
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCopySummary}
+                className="h-7 text-xs"
+              >
+                <Copy className="h-3 w-3 mr-1" />
+                Copy Summary
+              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportDoc}
+                      disabled={isExporting}
+                      className="h-7 w-7 p-0"
+                    >
+                      {isExporting ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Download detailed UW summary (.docx)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
@@ -416,11 +488,18 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
               {['Missing Info', 'Incorrect Data', 'Formatting Issue'].map((issue) => (
                 <Badge
                   key={issue}
-                  variant="outline"
-                  className="cursor-pointer hover:bg-secondary transition-colors text-xs px-3 py-1"
+                  variant={feedbackFlags.includes(issue) ? "default" : "outline"}
+                  className={`cursor-pointer transition-colors text-xs px-3 py-1 ${
+                    feedbackFlags.includes(issue) ? '' : 'hover:bg-secondary'
+                  }`}
                   onClick={() => {
+                    setFeedbackFlags((prev) =>
+                      prev.includes(issue)
+                        ? prev.filter((f) => f !== issue)
+                        : [...prev, issue]
+                    );
                     toast({
-                      title: "Issue flagged. Thanks for your feedback.",
+                      title: feedbackFlags.includes(issue) ? "Flag removed." : "Issue flagged. Thanks for your feedback.",
                     });
                   }}
                 >
