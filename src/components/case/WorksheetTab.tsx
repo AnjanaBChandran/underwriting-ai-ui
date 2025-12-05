@@ -69,6 +69,21 @@ interface ExtractedField {
   rationale?: string;
 }
 
+interface IIBEntry {
+  policy_no: string;
+  company: string;
+  sum_assured: string;
+  match_status: string;
+  reason: string;
+  effective_date: string;
+  product_type: string;
+  medical_flag: string;
+  standard_life: string;
+  reason_decline: string;
+  reason_postpone: string;
+  reason_repudiation: string;
+}
+
 interface WorksheetTabProps {
   caseData: {
     id: string;
@@ -87,6 +102,7 @@ interface WorksheetTabProps {
     uwSummary?: string;
     financialInfo?: ExtractedField[];
     medicalInfo?: ExtractedField[];
+    iib?: IIBEntry[];
   };
   onViewSource?: (docName: string, highlight: any) => void;
   onExplainExtraction?: (field: ExtractedField) => void;
@@ -119,6 +135,7 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
           documents: (caseData as any).documents,
           createdDate: (caseData as any).createdDate,
           updatedBy: (caseData as any).updatedBy,
+          iib: caseData.iib,
         },
         userName: currentUser?.name || "Current User",
         starRating,

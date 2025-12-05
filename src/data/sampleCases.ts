@@ -26,6 +26,21 @@ export interface ExtractedField {
   rationale?: string;
 }
 
+export interface IIBEntry {
+  policy_no: string;
+  company: string;
+  sum_assured: string;
+  match_status: string;
+  reason: string;
+  effective_date: string;
+  product_type: string;
+  medical_flag: string;
+  standard_life: string;
+  reason_decline: string;
+  reason_postpone: string;
+  reason_repudiation: string;
+}
+
 export interface Case {
   id: string;
   applicantName: string;
@@ -52,6 +67,7 @@ export interface Case {
   requiredDocuments?: string[];
   missingDocuments?: string[];
   iibData?: { label: string; value: string }[];
+  iib?: IIBEntry[];
   auditLogs?: { timestamp: string; user: string; action: string }[];
 }
 
@@ -248,6 +264,36 @@ Income proof verification pending`,
       { label: "Sum Assured", value: "₹42L" },
       { label: "Status", value: "Active" },
       { label: "Premium Paid", value: "Regular - No defaults" },
+    ],
+    iib: [
+      {
+        policy_no: "2180492652",
+        company: "ABSLI",
+        sum_assured: "₹4,09,200",
+        match_status: "N",
+        reason: "Proposal received / pending for UW",
+        effective_date: "2024-09-02",
+        product_type: "Endowment",
+        medical_flag: "Non-Medical",
+        standard_life: "Yes",
+        reason_decline: "-",
+        reason_postpone: "-",
+        reason_repudiation: "-",
+      },
+      {
+        policy_no: "2180492653",
+        company: "HDFC Life",
+        sum_assured: "₹42,00,000",
+        match_status: "N",
+        reason: "Policy issued - Standard",
+        effective_date: "2020-03-15",
+        product_type: "Term",
+        medical_flag: "Medical",
+        standard_life: "Yes",
+        reason_decline: "-",
+        reason_postpone: "-",
+        reason_repudiation: "-",
+      },
     ],
     auditLogs: [
       { timestamp: "2024-11-28 14:30", user: "Rohan Mehta", action: "Case assigned" },
