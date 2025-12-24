@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { sampleCases, Case } from "@/data/sampleCases";
-import { ArrowLeft, FileText, ClipboardList, Database, Clock, LogOut } from "lucide-react";
+import { ArrowLeft, FileText, ClipboardList, FileStack, Clock, LogOut } from "lucide-react";
 import { DocumentViewer } from "@/components/case/DocumentViewer";
 import { WorksheetTab } from "@/components/case/WorksheetTab";
-import { IIBTab } from "@/components/case/IIBTab";
+import { DocumentsOCRTab } from "@/components/case/DocumentsOCRTab";
 import { AuditLogsTab } from "@/components/case/AuditLogsTab";
 import { ApproveDialog } from "@/components/case/ApproveDialog";
 import { DeclineDialog } from "@/components/case/DeclineDialog";
@@ -293,9 +293,9 @@ const CaseWorkspace = () => {
                     <ClipboardList className="h-4 w-4 mr-2" />
                     Worksheet
                   </TabsTrigger>
-                  <TabsTrigger value="iib">
-                    <Database className="h-4 w-4 mr-2" />
-                    IIB
+                  <TabsTrigger value="documents">
+                    <FileStack className="h-4 w-4 mr-2" />
+                    Documents & OCR
                   </TabsTrigger>
                   <TabsTrigger value="audit">
                     <Clock className="h-4 w-4 mr-2" />
@@ -326,8 +326,16 @@ const CaseWorkspace = () => {
                   />
                 </TabsContent>
 
-                <TabsContent value="iib">
-                  <IIBTab iibData={caseData.iibData} />
+                <TabsContent value="documents">
+                  <DocumentsOCRTab 
+                    onViewDocument={(docName, highlight) => {
+                      setHighlightedDoc(docName);
+                      setHighlight(highlight);
+                    }}
+                    onRegenerateSummary={() => {
+                      addAuditLog("Summary Regenerated", "Triggered after document upload/fetch");
+                    }}
+                  />
                 </TabsContent>
 
                 <TabsContent value="audit">
