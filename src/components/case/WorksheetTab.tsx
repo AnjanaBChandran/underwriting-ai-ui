@@ -182,6 +182,7 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
                 criticalRisks={criticalRisks}
                 currentUser={currentUser}
                 onAddAuditLog={onAddAuditLog}
+                onViewSource={handleViewSourceFromAnalysis}
               />
             </CardContent>
           </Card>
