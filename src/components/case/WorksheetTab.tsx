@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Star, Info, ExternalLink, Loader2, Download } from "lucide-react";
+import { Copy, Star, Info, ExternalLink, Loader2, Download, Clock } from "lucide-react";
 import { generateUWSummaryDoc } from "@/lib/generateUWSummaryDoc";
 import { useToast } from "@/hooks/use-toast";
 import { ConfidenceLevel } from "./ConfidenceIndicator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { RiskBuckets } from "./RiskBuckets";
 
 // Compact confidence dot component
 const ConfidenceDot = ({ percentage }: { percentage?: number }) => {
@@ -284,8 +285,73 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
     });
   };
 
+  const handleViewSourceForRisk = (docName: string) => {
+    onViewSource?.(docName, { fieldName: "Document", value: "", confidence: "Unknown", x: 0, y: 0, width: 0.5, height: 0.1 });
+  };
+
   return (
     <div className="space-y-3">
+      {/* UW Summary Panel - FIRST */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-sm font-semibold">UW Summary</CardTitle>
+              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                Generated 2 mins ago
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCopySummary}
+                className="h-7 text-xs"
+              >
+                <Copy className="h-3 w-3 mr-1" />
+                Copy Summary
+              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportDoc}
+                      disabled={isExporting}
+                      className="h-7 w-7 p-0"
+                    >
+                      {isExporting ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Download detailed UW summary (.docx)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="bg-muted/50 rounded border border-border p-4 max-h-64 overflow-y-auto">
+            <pre className="text-xs font-mono whitespace-pre-wrap break-words leading-relaxed text-foreground">
+{uwSummary}
+            </pre>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Risk Buckets - SECOND */}
+      <RiskBuckets 
+        caseData={caseData} 
+        onViewSource={handleViewSourceForRisk}
+      />
+
       {/* Applicant Data Panel */}
       <Card className="border-border">
         <CardHeader className="pb-3">
@@ -418,55 +484,6 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
                 </div>
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* UW Summary Panel */}
-      <Card className="border-border">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold">UW Summary</CardTitle>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleCopySummary}
-                className="h-7 text-xs"
-              >
-                <Copy className="h-3 w-3 mr-1" />
-                Copy Summary
-              </Button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleExportDoc}
-                      disabled={isExporting}
-                      className="h-7 w-7 p-0"
-                    >
-                      {isExporting ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Download className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">Download detailed UW summary (.docx)</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="bg-muted/50 rounded border border-border p-4 max-h-64 overflow-y-auto">
-            <pre className="text-xs font-mono whitespace-pre-wrap break-words leading-relaxed text-foreground">
-{uwSummary}
-            </pre>
           </div>
         </CardContent>
       </Card>

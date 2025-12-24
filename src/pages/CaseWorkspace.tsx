@@ -241,7 +241,7 @@ const CaseWorkspace = () => {
 
           {/* Right Panel - Tabs */}
           <ResizablePanel defaultSize={50} minSize={40}>
-            <div className="h-full overflow-auto p-6 pb-24">
+            <div className="h-full overflow-auto p-6 pb-20">
               <Tabs defaultValue="worksheet" className="space-y-4">
                 <TabsList>
                   <TabsTrigger value="worksheet">
@@ -289,24 +289,13 @@ const CaseWorkspace = () => {
                   <AuditLogsTab auditLogs={caseData.auditLogs} caseData={caseData} />
                 </TabsContent>
               </Tabs>
-            </div>
 
-            {/* Sticky Footer Bar */}
-            <div className="fixed bottom-0 right-0 left-0 md:left-auto md:right-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 z-50">
-              <div className="container mx-auto px-6 py-4 flex justify-center gap-3">
-                <Button 
-                  variant="destructive"
-                  onClick={() => setDeclineDialogOpen(true)}
-                  className="min-w-[140px]"
-                >
-                  Decline
-                </Button>
-                <Button 
-                  onClick={() => setApproveDialogOpen(true)}
-                  className="min-w-[140px] bg-primary hover:bg-primary/90"
-                >
-                  Approve
-                </Button>
+              {/* Status indicator replacing Approve/Decline */}
+              <div className="fixed bottom-0 right-0 left-0 md:left-auto md:right-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 z-50">
+                <div className="container mx-auto px-6 py-3 flex items-center justify-center gap-2">
+                  <span className="text-amber-500">⏳</span>
+                  <span className="text-sm text-muted-foreground">Summary ready for NOVA</span>
+                </div>
               </div>
             </div>
           </ResizablePanel>

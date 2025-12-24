@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { FileText, ExternalLink, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { DocumentStatusCard } from "./DocumentStatusCard";
 
 interface Document {
   name: string;
@@ -39,14 +40,16 @@ export const DocumentViewer = ({
   onClearHighlight,
   missingDocuments = []
 }: DocumentViewerProps) => {
-  const [selectedDoc, setSelectedDoc] = useState(documents[0]?.name || "");
+  const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
+  const [showStatusCard, setShowStatusCard] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
-  // Update selected doc when prop changes
+  // Update selected doc when prop changes (from View Source)
   useEffect(() => {
     if (selectedDocName) {
       setSelectedDoc(selectedDocName);
+      setShowStatusCard(false);
     }
   }, [selectedDocName]);
 
@@ -55,12 +58,22 @@ export const DocumentViewer = ({
     if (highlight && scrollAreaRef.current && imageRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
-        // Calculate scroll position to show highlight in top half of viewport
         const scrollTop = highlight.y * imageRef.current.height - 100;
         scrollContainer.scrollTop = Math.max(0, scrollTop);
       }
     }
   }, [highlight]);
+
+  const handleSelectDocument = (docName: string) => {
+    setSelectedDoc(docName);
+    setShowStatusCard(false);
+  };
+
+  const handleBackToStatus = () => {
+    setShowStatusCard(true);
+    setSelectedDoc(null);
+    onClearHighlight?.();
+  };
 
   const currentDocument = documents.find(doc => doc.name === selectedDoc);
   const documentPath = currentDocument?.path;
@@ -83,7 +96,6 @@ export const DocumentViewer = ({
     }
   };
 
-  // Calculate document health
   const avgQuality = documents.reduce((acc, doc) => {
     const score = doc.quality === "High" ? 3 : doc.quality === "Medium" ? 2 : doc.quality === "Low" ? 1 : 0;
     return acc + score;
@@ -103,13 +115,24 @@ export const DocumentViewer = ({
     }
   };
 
+  // Show status card by default
+  if (showStatusCard && !selectedDoc) {
+    return (
+      <DocumentStatusCard
+        documents={documents}
+        missingDocuments={missingDocuments}
+        onSelectDocument={handleSelectDocument}
+      />
+    );
+  }
+
   return (
     <div className="h-full flex flex-col border border-border rounded-lg bg-muted/30">
       {/* Header */}
       <div className="p-4 border-b border-border bg-card/50">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-4">
-            <h3 className="text-sm font-semibold">Document Viewer</h3>
+            <h3 className="text-sm font-semibold">Documents & OCR</h3>
             {missingDocuments.length > 0 && (
               <div className="flex gap-1">
                 {missingDocuments.map((doc, idx) => (
@@ -120,17 +143,27 @@ export const DocumentViewer = ({
               </div>
             )}
           </div>
-          {highlight && onClearHighlight && (
+          <div className="flex items-center gap-2">
+            {highlight && onClearHighlight && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearHighlight}
+                className="h-6 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear highlight
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
-              onClick={onClearHighlight}
+              onClick={handleBackToStatus}
               className="h-6 text-xs text-muted-foreground hover:text-foreground"
             >
-              <X className="h-3 w-3 mr-1" />
-              Clear highlight
+              ← Back to overview
             </Button>
-          )}
+          </div>
         </div>
         
         {/* Document Health Banner */}
@@ -151,7 +184,7 @@ export const DocumentViewer = ({
           </div>
         </div>
         <div className="flex gap-2 items-center">
-          <Select value={selectedDoc} onValueChange={setSelectedDoc}>
+          <Select value={selectedDoc || ""} onValueChange={handleSelectDocument}>
             <SelectTrigger className="bg-background flex-1">
               <SelectValue placeholder="Select document" />
             </SelectTrigger>
@@ -200,7 +233,7 @@ export const DocumentViewer = ({
               <img 
                 ref={imageRef}
                 src={documentPath} 
-                alt={selectedDoc}
+                alt={selectedDoc || "Document"}
                 className="w-full h-auto"
               />
               {highlight && (
