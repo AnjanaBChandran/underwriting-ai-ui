@@ -191,7 +191,7 @@ const CaseWorkspace = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b bg-card">
+      <header className="border-b bg-card sticky top-0 z-40">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -230,6 +230,39 @@ const CaseWorkspace = () => {
                 Logout
               </Button>
             </div>
+          </div>
+        </div>
+        
+        {/* UW Metadata Strip */}
+        <div className="border-t bg-muted/30 px-6 py-2">
+          <div className="container mx-auto flex items-center gap-2 text-sm flex-wrap">
+            <span className="text-muted-foreground">
+              <span className="font-medium text-foreground">{caseData.policyType || "Term"}</span>
+            </span>
+            <span className="text-muted-foreground/50">|</span>
+            <span className="text-muted-foreground">
+              App: <span className="font-medium text-foreground">{caseData.applicationNumber || caseData.id}</span>
+            </span>
+            <span className="text-muted-foreground/50">|</span>
+            <span className="text-muted-foreground">
+              Advisor: <span className="font-medium text-foreground">{caseData.advisorLevel || "—"}</span>
+            </span>
+            <span className="text-muted-foreground/50">|</span>
+            <span className="text-muted-foreground">
+              Channel: <span className="font-medium text-foreground">{caseData.channel || "—"}</span>
+            </span>
+            <span className="text-muted-foreground/50">|</span>
+            <span className="text-muted-foreground">
+              Branch: <span className="font-medium text-foreground">{caseData.branch || "—"}</span>
+            </span>
+            {caseData.blacklistedReason && (
+              <>
+                <span className="text-muted-foreground/50">|</span>
+                <span className="text-destructive font-bold">
+                  ⚠ Blacklisted: {caseData.blacklistedReason}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </header>
