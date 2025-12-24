@@ -14,6 +14,7 @@ import { ApproveDialog } from "@/components/case/ApproveDialog";
 import { DeclineDialog } from "@/components/case/DeclineDialog";
 import { RequestInfoDialog } from "@/components/case/RequestInfoDialog";
 import { ExplainExtractionPanel } from "@/components/case/ExplainExtractionPanel";
+import { ViewSourceModal } from "@/components/case/ViewSourceModal";
 import { useToast } from "@/hooks/use-toast";
 
 const CaseWorkspace = () => {
@@ -30,6 +31,7 @@ const CaseWorkspace = () => {
   const [requestInfoDialogOpen, setRequestInfoDialogOpen] = useState(false);
   const [explainPanelOpen, setExplainPanelOpen] = useState(false);
   const [explainField, setExplainField] = useState<any>(null);
+  const [viewSourceModalOpen, setViewSourceModalOpen] = useState(false);
   
   const [highlightedDoc, setHighlightedDoc] = useState<string | undefined>();
   const [highlight, setHighlight] = useState<any>();
@@ -123,11 +125,21 @@ const CaseWorkspace = () => {
   const handleViewSource = (docName: string, highlightData: any) => {
     setHighlightedDoc(docName);
     setHighlight(highlightData);
+    // Open modal instead of just highlighting
+    setViewSourceModalOpen(true);
   };
 
   const handleClearHighlight = () => {
     setHighlight(undefined);
     setHighlightedDoc(undefined);
+    setViewSourceModalOpen(false);
+  };
+
+  // Get document path for modal
+  const getDocumentPath = (docName?: string) => {
+    if (!docName) return undefined;
+    const doc = caseData.documents?.find(d => d.name === docName);
+    return doc?.path;
   };
 
   const handleExplainExtraction = (field: any) => {
@@ -329,6 +341,15 @@ const CaseWorkspace = () => {
         evidenceSnippets={explainField?.evidenceSnippets || []}
         rationale={explainField?.rationale}
         onViewSource={handleExplainViewSource}
+      />
+
+      {/* View Source Modal */}
+      <ViewSourceModal
+        isOpen={viewSourceModalOpen}
+        onClose={handleClearHighlight}
+        docName={highlightedDoc || ""}
+        docPath={getDocumentPath(highlightedDoc)}
+        highlight={highlight}
       />
     </div>
   );
