@@ -99,6 +99,26 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
 
   const caseType = getCaseType();
 
+  // Count critical risks for summary readiness
+  const countCriticalRisks = () => {
+    let count = 0;
+    // Check financial info for critical issues
+    caseData.financialInfo?.forEach(field => {
+      if (field.confidence === 'Low' || field.value.toLowerCase().includes('pending')) {
+        count++;
+      }
+    });
+    // Check medical info for critical issues
+    caseData.medicalInfo?.forEach(field => {
+      if (field.confidence === 'Low' || field.value.toLowerCase().includes('abnormal')) {
+        count++;
+      }
+    });
+    return count;
+  };
+
+  const criticalRisks = countCriticalRisks();
+
   const handleSubmitComment = async () => {
     if (!feedbackComment.trim()) {
       setCommentError("Please enter a comment to submit.");
@@ -159,6 +179,7 @@ export const WorksheetTab = ({ caseData, onViewSource, onExplainExtraction, onAd
             <CardContent className="pt-0">
               <UWSummaryNOVA 
                 caseData={caseData}
+                criticalRisks={criticalRisks}
                 currentUser={currentUser}
                 onAddAuditLog={onAddAuditLog}
               />
