@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertTriangle, Upload, FolderDown } from "lucide-react";
@@ -37,102 +36,107 @@ export const DocumentStatusCard = ({
   };
 
   return (
-    <div className="h-full flex flex-col border border-border rounded-lg bg-muted/30">
+    <div className="h-full flex flex-col border border-border rounded-lg bg-card">
       {/* Header */}
-      <div className="p-4 border-b border-border bg-card/50">
-        <h3 className="text-sm font-semibold">Documents & OCR</h3>
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Documents & OCR</h3>
+          <Badge variant="outline" className="text-[10px]">
+            {documents.length} files
+          </Badge>
+        </div>
       </div>
 
-      {/* Status Card */}
-      <div className="flex-1 p-6 flex flex-col items-center justify-center">
-        <Card className="w-full max-w-md border-border bg-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-center">Document Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-2 p-3 rounded-md bg-muted/50">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="text-lg font-bold">{documents.length}</p>
-                  <p className="text-xs text-muted-foreground">Documents processed</p>
-                </div>
-              </div>
-              
-              {missingDocuments.length > 0 ? (
-                <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                  <div>
-                    <p className="text-lg font-bold text-destructive">{missingDocuments.length}</p>
-                    <p className="text-xs text-muted-foreground">Missing</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 p-3 rounded-md bg-muted/50">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="text-lg font-bold">0</p>
-                    <p className="text-xs text-muted-foreground">Missing</p>
-                  </div>
-                </div>
-              )}
-            </div>
+      {/* Primary Actions - Top */}
+      <div className="p-4 border-b border-border bg-muted/30">
+        <div className="flex gap-2">
+          <Button size="sm" className="flex-1 text-xs">
+            <Upload className="h-3.5 w-3.5 mr-1.5" />
+            Upload Documents
+          </Button>
+          <Button variant="secondary" size="sm" className="flex-1 text-xs">
+            <FolderDown className="h-3.5 w-3.5 mr-1.5" />
+            Fetch from IDOC
+          </Button>
+        </div>
+      </div>
 
-            {/* OCR Confidence */}
-            <div className="flex items-center justify-between p-3 rounded-md bg-muted/50">
-              <span className="text-xs text-muted-foreground">OCR Confidence:</span>
-              <span className={`text-sm font-semibold ${getOcrColor(ocrLevel)}`}>
-                {ocrLevel} ({Math.round(avgOcrScore)}%)
+      {/* Status Summary */}
+      <div className="p-4 space-y-4">
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="p-3 rounded-lg bg-muted/50 border border-border">
+            <div className="flex items-center gap-2 mb-1">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <span className="text-lg font-bold">{documents.length}</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Processed</p>
+          </div>
+          
+          <div className={`p-3 rounded-lg border ${missingDocuments.length > 0 ? 'bg-destructive/10 border-destructive/30' : 'bg-muted/50 border-border'}`}>
+            <div className="flex items-center gap-2 mb-1">
+              {missingDocuments.length > 0 ? (
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+              )}
+              <span className={`text-lg font-bold ${missingDocuments.length > 0 ? 'text-destructive' : ''}`}>
+                {missingDocuments.length}
               </span>
             </div>
+            <p className="text-[10px] text-muted-foreground">Missing</p>
+          </div>
 
-            {/* Missing Documents */}
-            {missingDocuments.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">Missing documents:</p>
-                <div className="flex flex-wrap gap-1">
-                  {missingDocuments.map((doc, idx) => (
-                    <Badge key={idx} variant="destructive" className="text-xs">
-                      {doc}
-                    </Badge>
-                  ))}
+          <div className="p-3 rounded-lg bg-muted/50 border border-border">
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`text-lg font-bold ${getOcrColor(ocrLevel)}`}>
+                {Math.round(avgOcrScore)}%
+              </span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">OCR Confidence</p>
+          </div>
+        </div>
+
+        {/* Missing Documents - Clickable Pills */}
+        {missingDocuments.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-destructive">Missing Documents:</p>
+            <div className="flex flex-wrap gap-1.5">
+              {missingDocuments.map((doc, idx) => (
+                <Badge 
+                  key={idx} 
+                  variant="destructive" 
+                  className="text-xs cursor-pointer hover:bg-destructive/90 transition-colors"
+                  onClick={() => onSelectDocument(doc)}
+                >
+                  {doc}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Available Documents */}
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Available Documents:</p>
+          <div className="space-y-1 max-h-[280px] overflow-y-auto pr-1">
+            {documents.map((doc, idx) => (
+              <button
+                key={idx}
+                onClick={() => onSelectDocument(doc.name)}
+                className="w-full text-left px-3 py-2.5 rounded-md text-xs bg-muted/30 hover:bg-muted border border-transparent hover:border-border transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                  <span className="truncate">{doc.name}</span>
                 </div>
-              </div>
-            )}
-
-            {/* Document List */}
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Available documents:</p>
-              <div className="space-y-1 max-h-40 overflow-y-auto">
-                {documents.map((doc, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => onSelectDocument(doc.name)}
-                    className="w-full text-left px-3 py-2 rounded-md text-xs hover:bg-muted transition-colors flex items-center justify-between group"
-                  >
-                    <span className="truncate">{doc.name}</span>
-                    <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">
-                      View →
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" className="flex-1 text-xs">
-                <Upload className="h-3 w-3 mr-1.5" />
-                Upload Documents
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1 text-xs">
-                <FolderDown className="h-3 w-3 mr-1.5" />
-                Fetch from IDOC
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity text-[10px] flex-shrink-0 ml-2">
+                  View →
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
