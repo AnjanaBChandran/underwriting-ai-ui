@@ -60,6 +60,11 @@ export interface Case {
   occupation?: string;
   drcScore?: string;
   nominee?: string;
+  policyType?: "Term" | "Non-Term" | "Medical";
+  applicationNumber?: string;
+  advisorLevel?: string;
+  branch?: string;
+  blacklistedReason?: string;
   uwSummary?: string;
   financialInfo?: ExtractedField[];
   medicalInfo?: ExtractedField[];
@@ -91,6 +96,11 @@ export const sampleCases: Case[] = [
     occupation: "Self Employed",
     drcScore: "Standard",
     nominee: "Mother",
+    policyType: "Term",
+    applicationNumber: "APP-2024-009976959",
+    advisorLevel: "LEV3A",
+    branch: "Mira Road E",
+    blacklistedReason: undefined,
     uwSummary: `Summary
 009976959
 Amit Sharma
