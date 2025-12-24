@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+
 import { sampleCases, Case } from "@/data/sampleCases";
 import { ArrowLeft, FileText, ClipboardList, FileStack, Clock, LogOut } from "lucide-react";
 import { DocumentViewer } from "@/components/case/DocumentViewer";
@@ -267,92 +267,65 @@ const CaseWorkspace = () => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
-          {/* Left Panel - Document Viewer */}
-          <ResizablePanel defaultSize={50} minSize={30}>
-            <div className="h-full p-6">
-              <DocumentViewer 
-                documents={caseData.documents || []} 
-                selectedDocName={highlightedDoc}
-                highlight={highlight}
-                onClearHighlight={handleClearHighlight}
-                missingDocuments={caseData.missingDocuments}
+      <div className="flex-1 overflow-auto">
+        <div className="container mx-auto px-6 py-6">
+          <Tabs defaultValue="worksheet" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="worksheet">
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Worksheet
+              </TabsTrigger>
+              <TabsTrigger value="documents">
+                <FileStack className="h-4 w-4 mr-2" />
+                Documents & OCR
+              </TabsTrigger>
+              <TabsTrigger value="audit">
+                <Clock className="h-4 w-4 mr-2" />
+                Audit Logs
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="worksheet">
+              <WorksheetTab 
+                caseData={caseData} 
+                onViewSource={handleViewSource}
+                onExplainExtraction={handleExplainExtraction}
+                onAddAuditLog={(log) => {
+                  if (!currentCase) return;
+                  setCurrentCase({
+                    ...currentCase,
+                    auditLogs: [
+                      {
+                        timestamp: log.timestamp,
+                        user: log.user,
+                        action: log.comment ? `${log.action}: ${log.comment}` : log.action,
+                      },
+                      ...(currentCase.auditLogs || [])
+                    ]
+                  });
+                }}
+                currentUser={{ id: "user_001", name: "DemoUnderwriter" }}
               />
-            </div>
-          </ResizablePanel>
+            </TabsContent>
 
-          <ResizableHandle withHandle />
+            <TabsContent value="documents">
+              <DocumentsOCRTab 
+                onViewDocument={(docName, highlight) => {
+                  setHighlightedDoc(docName);
+                  setHighlight(highlight);
+                  setViewSourceModalOpen(true);
+                }}
+                onRegenerateSummary={() => {
+                  addAuditLog("Summary Regenerated", "Triggered after document upload/fetch");
+                }}
+              />
+            </TabsContent>
 
-          {/* Right Panel - Tabs */}
-          <ResizablePanel defaultSize={50} minSize={40}>
-            <div className="h-full overflow-auto p-6 pb-20">
-              <Tabs defaultValue="worksheet" className="space-y-4">
-                <TabsList>
-                  <TabsTrigger value="worksheet">
-                    <ClipboardList className="h-4 w-4 mr-2" />
-                    Worksheet
-                  </TabsTrigger>
-                  <TabsTrigger value="documents">
-                    <FileStack className="h-4 w-4 mr-2" />
-                    Documents & OCR
-                  </TabsTrigger>
-                  <TabsTrigger value="audit">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Audit Logs
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="worksheet">
-                  <WorksheetTab 
-                    caseData={caseData} 
-                    onViewSource={handleViewSource}
-                    onExplainExtraction={handleExplainExtraction}
-                    onAddAuditLog={(log) => {
-                      if (!currentCase) return;
-                      setCurrentCase({
-                        ...currentCase,
-                        auditLogs: [
-                          {
-                            timestamp: log.timestamp,
-                            user: log.user,
-                            action: log.comment ? `${log.action}: ${log.comment}` : log.action,
-                          },
-                          ...(currentCase.auditLogs || [])
-                        ]
-                      });
-                    }}
-                    currentUser={{ id: "user_001", name: "DemoUnderwriter" }}
-                  />
-                </TabsContent>
-
-                <TabsContent value="documents">
-                  <DocumentsOCRTab 
-                    onViewDocument={(docName, highlight) => {
-                      setHighlightedDoc(docName);
-                      setHighlight(highlight);
-                    }}
-                    onRegenerateSummary={() => {
-                      addAuditLog("Summary Regenerated", "Triggered after document upload/fetch");
-                    }}
-                  />
-                </TabsContent>
-
-                <TabsContent value="audit">
-                  <AuditLogsTab auditLogs={caseData.auditLogs} caseData={caseData} />
-                </TabsContent>
-              </Tabs>
-
-              {/* Status indicator replacing Approve/Decline */}
-              <div className="fixed bottom-0 right-0 left-0 md:left-auto md:right-0 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 z-50">
-                <div className="container mx-auto px-6 py-3 flex items-center justify-center gap-2">
-                  <span className="text-amber-500">⏳</span>
-                  <span className="text-sm text-muted-foreground">Summary ready for NOVA</span>
-                </div>
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+            <TabsContent value="audit">
+              <AuditLogsTab auditLogs={caseData.auditLogs} caseData={caseData} />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
 
       {/* Dialogs */}
