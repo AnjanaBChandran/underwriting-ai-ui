@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Copy, Download, Clock, RefreshCw, Loader2, Info } from "lucide-react";
+import { Copy, Download, Clock, RefreshCw, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { generateUWSummaryDoc } from "@/lib/generateUWSummaryDoc";
@@ -26,19 +26,45 @@ interface UWSummaryNOVAProps {
     iib?: any[];
     iibData?: { label: string; value: string }[];
     documents?: any[];
+    missingDocuments?: string[];
     createdDate?: string;
     updatedBy?: string;
+    lastDocumentUpload?: Date;
   };
+  criticalRisks?: number;
   currentUser?: { id: string; name: string };
   onAddAuditLog?: (log: any) => void;
 }
 
-export const UWSummaryNOVA = ({ caseData, currentUser, onAddAuditLog }: UWSummaryNOVAProps) => {
+export const UWSummaryNOVA = ({ caseData, criticalRisks = 0, currentUser, onAddAuditLog }: UWSummaryNOVAProps) => {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [lastTrigger, setLastTrigger] = useState<string>("Initial load");
   const [generatedAt, setGeneratedAt] = useState<Date>(new Date());
+
+  // Calculate summary readiness
+  const missingDocs = caseData.missingDocuments || [];
+  const hasMissingDocs = missingDocs.length > 0;
+  const hasCriticalRisks = criticalRisks > 0;
+  const lastUpload = caseData.lastDocumentUpload || new Date(0);
+  const summaryOutdated = lastUpload > generatedAt;
+  
+  const isReady = !hasMissingDocs && !hasCriticalRisks && !summaryOutdated;
+  
+  const getBlockingReasons = () => {
+    const reasons: string[] = [];
+    if (hasMissingDocs) {
+      reasons.push(`Missing documents: ${missingDocs.join(', ')}`);
+    }
+    if (hasCriticalRisks) {
+      reasons.push(`${criticalRisks} unresolved critical risk${criticalRisks > 1 ? 's' : ''}`);
+    }
+    if (summaryOutdated) {
+      reasons.push('Summary outdated — regenerate after latest upload');
+    }
+    return reasons;
+  };
 
   // Generate plain-text summary (no icons, no tables, copy-pastable)
   const generatePlainTextSummary = () => {
@@ -252,6 +278,50 @@ export const UWSummaryNOVA = ({ caseData, currentUser, onAddAuditLog }: UWSummar
         <pre className="text-xs font-mono whitespace-pre-wrap break-words leading-relaxed text-foreground">
 {uwSummary}
         </pre>
+      </div>
+
+      {/* Summary Readiness Indicator */}
+      <div className="flex justify-end pt-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-default transition-colors ${
+                  isReady
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                    : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                }`}
+              >
+                {isReady ? (
+                  <>
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Summary ready for NOVA
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    Summary incomplete — pending inputs
+                  </>
+                )}
+              </div>
+            </TooltipTrigger>
+            {!isReady && (
+              <TooltipContent side="top" align="end" className="max-w-xs">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium">Blocking issues:</p>
+                  <ul className="text-xs space-y-0.5">
+                    {getBlockingReasons().map((reason, idx) => (
+                      <li key={idx} className="flex items-start gap-1">
+                        <span className="text-amber-500">•</span>
+                        {reason}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
