@@ -47,6 +47,4 @@ Demonstrates rapid product development using AI-assisted tools (vibe coding), en
 - Integrated workflow for underwriting use case  
 - Focused on usability and product flow  
 
-- Built UI using Lovable  
-- Integrated workflow for underwriting use case  
-- Focused on usability and product flow  
+
