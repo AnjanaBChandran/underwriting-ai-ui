@@ -34,6 +34,8 @@ This UI connects to a larger AI system that performs:
 - Lovable  
 
 ---
+👉 Full system design here:  
+[AI Underwriting System (Architecture)](https://github.com/AnjanaBChandran/underwriting-ai-system)
 
 ## 💡 Why This Matters
 
